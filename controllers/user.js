@@ -49,7 +49,7 @@ export const register = catchError(async (req, res, next) => {
     status: statusText.SUCCESS,
     message: "You registered successfully",
     code: 201,
-    data: newUser,
+    data: { user: newUser },
   });
 });
 
@@ -92,12 +92,101 @@ export const login = catchError(async (req, res, next) => {
   );
 
   // add token in user collection
-  await userModel.updateOne({email},{$set:{token}});
+  await userModel.updateOne({ email }, { $set: { token } });
 
   return res.json({
     status: statusText.SUCCESS,
     message: "You login successfully",
     code: 200,
     data: { token },
+  });
+});
+
+export const getAllUsers = catchError(async (req, res, next) => {
+  const users = await userModel.find({}, { password: false });
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "All users are here",
+    code: 200,
+    data: { users },
+  });
+});
+
+export const getUserById = catchError(async (req, res, next) => {
+  const userId = req.params.id;
+
+  const user = await userModel.findById(userId);
+  if (!user) {
+    const error = appError.create("user is not found", 404, statusText.FAIL);
+    next(error);
+    return;
+  }
+
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "This is the user",
+    code: 200,
+    data: { user },
+  });
+});
+
+export const updateUserById = catchError(async (req, res, next) => {
+  const userId = req.params.id;
+
+  const user = await userModel.findById(userId);
+  if (!user) {
+    const error = appError.create("user is not found", 404, statusText.FAIL);
+    next(error);
+    return;
+  }
+
+  const { firstName, lastName } = req.body || user;
+
+  if (!req.body) {
+    const error = appError.create("Body is empty", 400, statusText.ERROR);
+    next(error);
+    return;
+  }
+
+  if (!firstName && !lastName) {
+    const error = appError.create(
+      "You can edit firstName or lastName only",
+      400,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+
+  await userModel.findOneAndUpdate(
+    { _id: userId },
+    { $set: { firstName, lastName } }
+  );
+
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "updated user successfully",
+    code: 200,
+    data: null,
+  });
+});
+
+export const deleteUserById = catchError(async (req, res, next) => {
+  const userId = req.params.id;
+
+  const user = await userModel.findById(userId);
+  if (!user) {
+    const error = appError.create("user is not found", 404, statusText.FAIL);
+    next(error);
+    return;
+  }
+
+  await userModel.deleteOne({ _id: userId });
+
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "deleted user successfully",
+    code: 200,
+    data: null,
   });
 });
