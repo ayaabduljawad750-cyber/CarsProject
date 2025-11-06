@@ -1,0 +1,103 @@
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import catchError from "../middlewares/catchError.js";
+import userModel from "../models/user.js";
+import appError from "../utils/appError.js";
+import statusText from "../utils/statusText.js";
+import { isEmail, isName, isStrongPassword } from "../utils/validate.js";
+
+export const register = catchError(async (req, res, next) => {
+  let { firstName, lastName, email, password } = req.body;
+  if (!firstName || !lastName || !email || !password) {
+    const error = appError.create(
+      "firstName, lastName, email and password are required",
+      400,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+
+  try {
+    isName(firstName);
+    isName(lastName);
+    isEmail(email);
+    isStrongPassword(password);
+  } catch (err) {
+    next(err);
+    return;
+  }
+
+  const oldUser = await userModel.findOne({ email });
+
+  if (oldUser) {
+    const error = appError.create("user already exists", 400, statusText.FAIL);
+    next(error);
+    return;
+  }
+
+  const hashPassword = await bcrypt.hash(password, 10);
+
+  const newUser = await userModel.insertOne({
+    firstName,
+    lastName,
+    email,
+    password: hashPassword,
+  });
+
+  res.status(201).json({
+    status: statusText.SUCCESS,
+    message: "You registered successfully",
+    code: 201,
+    data: newUser,
+  });
+});
+
+export const login = catchError(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    const error = appError.create(
+      "email and password are required",
+      400,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+
+  const user = await userModel.findOne({ email: email });
+
+  if (!user) {
+    const error = appError.create("user not found", 404, statusText.FAIL);
+    next(error);
+    return;
+  }
+
+  const matchedPassword = await bcrypt.compare(password, user.password);
+
+  if (!matchedPassword) {
+    const error = appError.create("password is wrong", 400, statusText.ERROR);
+    next(error);
+    return;
+  }
+
+  const token = jwt.sign(
+    {
+      email: user.email,
+      id: user._id,
+      role: user.role,
+    },
+    process.env.JWT_SECRET
+  );
+
+  // add token in user collection
+  await userModel.updateOne({email},{$set:{token}});
+
+  return res.json({
+    status: statusText.SUCCESS,
+    message: "You login successfully",
+    code: 200,
+    data: { token },
+  });
+});

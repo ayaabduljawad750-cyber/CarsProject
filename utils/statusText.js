@@ -1,7 +1,7 @@
 let statusText = {
-  SUCCESS:"SUCCESS",
-  FAIL:"FAIL",
-  ERROR:"ERROR"
+  SUCCESS:"Success",
+  FAIL:"Fail",
+  ERROR:"Error"
 }
 
 export default statusText

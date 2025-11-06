@@ -8,6 +8,7 @@ import handelError from './middlewares/handelError.js';
 import appError from './utils/appError.js';
 import statusText from './utils/statusText.js';
 import catchError from './middlewares/catchError.js';
+import userRoute from './routes/user.js';
 
 const app = express();
 connectDB();
@@ -15,7 +16,7 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
-
+app.use("/users",userRoute)
 
 app.use(catchError(function(req,res,next){
   const error = appError.create("api is not found",404,statusText.FAIL)

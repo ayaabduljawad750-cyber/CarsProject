@@ -1,10 +1,8 @@
 let catchError = (asyncFn) => {
-  return  function(req,res,next){
-    try {
-      asyncFn(req,res,next)
-    } catch (err) {
-      next(err);
-    }
+  return (req,res,next)=>{
+
+   asyncFn(req,res,next).catch((err)=>{next(err)})
+
   };
 };
 
