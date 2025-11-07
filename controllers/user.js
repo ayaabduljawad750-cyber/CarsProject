@@ -102,11 +102,46 @@ export const login = catchError(async (req, res, next) => {
   });
 });
 
-export const getAllUsers = catchError(async (req, res, next) => {
-  const users = await userModel.find({}, { password: false });
+export const getUsers = catchError(async (req, res, next) => {
+  let users;
+  let search;
+  if (req.query.firstName) {
+    search = req.query.firstName;
+    users = await userModel.find(
+      { firstName: { $regex: search, $options: "i" } },
+      { password: false }
+    );
+  } else if (req.query.lastName) {
+    search = req.query.lastName;
+    users = await userModel.find(
+      { lastName: { $regex: search, $options: "i" } },
+      { password: false }
+    );
+  } else if (req.query.email) {
+    search = req.query.email;
+    users = await userModel.find(
+      { email: { $regex: search, $options: "i" } },
+      { password: false }
+    );
+  } else if (req.query.search) {
+    search = req.query.search;
+    users = await userModel.find(
+      {
+        $or: [
+          { firstName: { $regex: search, $options: "i" } },
+          { lastName: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
+      },
+      { password: false }
+    );
+  } else {
+    users = await userModel.find({}, { password: false });
+  }
+
   res.status(200).json({
     status: statusText.SUCCESS,
-    message: "All users are here",
+    message: "users are here",
     code: 200,
     data: { users },
   });

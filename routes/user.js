@@ -1,16 +1,18 @@
 import express from "express"
-import { register , login,getAllUsers,getUserById,updateUserById} from "../controllers/user.js"
+import { register , login,getUsers,getUserById,updateUserById,deleteUserById} from "../controllers/user.js"
 
 let userRoute = express.Router()
 
-userRoute.get("/",getAllUsers)
+userRoute.post("/register",register)
+
+userRoute.post("/login",login)
+
+userRoute.get("/",getUsers)
 
 userRoute.get("/:id",getUserById)
 
 userRoute.put("/:id",updateUserById)
 
-userRoute.post("/register",register)
-
-userRoute.post("/login",login)
+userRoute.delete("/:id",deleteUserById)
 
 export default userRoute
