@@ -1,6 +1,6 @@
 const userRoles = {
-    ADMIN: "Admin",
-    USER: "User",
-}
+  ADMIN: "Admin",
+  USER: "User",
+};
 
-export default userRoles;
+module.exports = userRoles;

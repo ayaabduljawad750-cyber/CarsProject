@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
-import { isName, isEmail, isStrongPassword } from "../utils/validate.js";
-import userRoles from "../utils/userRoles.js";
+const mongoose = require("mongoose");
+const { isName, isEmail, isStrongPassword } = require("../utils/validate.js");
+const userRoles = require("../utils/userRoles.js");
 
 const userSchema = mongoose.Schema({
   firstName: {
@@ -16,7 +16,7 @@ const userSchema = mongoose.Schema({
   email: {
     type: String,
     required: [true, "Email is required"],
-    unique:[true,"email already exists"],
+    unique: [true, "email already exists"],
     validate: [isEmail, "Invalid Email"],
   },
   password: {
@@ -29,11 +29,11 @@ const userSchema = mongoose.Schema({
     enum: [userRoles.ADMIN, userRoles.USER],
     default: userRoles.USER,
   },
-  token:{
-    type:String
-  }
+  token: {
+    type: String,
+  },
 });
 
-let userModel = mongoose.model("User",userSchema)
+let userModel = mongoose.model("User", userSchema);
 
-export default userModel
+module.exports = userModel;

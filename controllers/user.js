@@ -1,12 +1,12 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import catchError from "../middlewares/catchError.js";
-import userModel from "../models/user.js";
-import appError from "../utils/appError.js";
-import statusText from "../utils/statusText.js";
-import { isEmail, isName, isStrongPassword } from "../utils/validate.js";
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const catchError = require("../middlewares/catchError.js");
+const userModel = require("../models/user.js");
+const appError = require("../utils/appError.js");
+const statusText = require("../utils/statusText.js");
+const { isEmail, isName, isStrongPassword } = require("../utils/validate.js");
 
-export const register = catchError(async (req, res, next) => {
+const register = catchError(async (req, res, next) => {
   let { firstName, lastName, email, password } = req.body;
   if (!firstName || !lastName || !email || !password) {
     const error = appError.create(
@@ -53,7 +53,7 @@ export const register = catchError(async (req, res, next) => {
   });
 });
 
-export const login = catchError(async (req, res, next) => {
+const login = catchError(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -102,7 +102,7 @@ export const login = catchError(async (req, res, next) => {
   });
 });
 
-export const getUsers = catchError(async (req, res, next) => {
+const getUsers = catchError(async (req, res, next) => {
   let users;
   let search;
   if (req.query.firstName) {
@@ -147,7 +147,7 @@ export const getUsers = catchError(async (req, res, next) => {
   });
 });
 
-export const getUserById = catchError(async (req, res, next) => {
+const getUserById = catchError(async (req, res, next) => {
   const userId = req.params.id;
 
   const user = await userModel.findById(userId);
@@ -165,7 +165,7 @@ export const getUserById = catchError(async (req, res, next) => {
   });
 });
 
-export const updateUserById = catchError(async (req, res, next) => {
+const updateUserById = catchError(async (req, res, next) => {
   const userId = req.params.id;
 
   const user = await userModel.findById(userId);
@@ -206,7 +206,7 @@ export const updateUserById = catchError(async (req, res, next) => {
   });
 });
 
-export const deleteUserById = catchError(async (req, res, next) => {
+const deleteUserById = catchError(async (req, res, next) => {
   const userId = req.params.id;
 
   const user = await userModel.findById(userId);
@@ -225,3 +225,12 @@ export const deleteUserById = catchError(async (req, res, next) => {
     data: null,
   });
 });
+
+module.exports = {
+  getUsers,
+  getUserById,
+  register,
+  login,
+  updateUserById,
+  deleteUserById,
+};
