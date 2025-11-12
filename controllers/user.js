@@ -18,15 +18,10 @@ const register = catchError(async (req, res, next) => {
     return;
   }
 
-  try {
-    isName(firstName);
-    isName(lastName);
-    isEmail(email);
-    isStrongPassword(password);
-  } catch (err) {
-    next(err);
-    return;
-  }
+  isName(firstName);
+  isName(lastName);
+  isEmail(email);
+  isStrongPassword(password);
 
   const oldUser = await userModel.findOne({ email });
 
