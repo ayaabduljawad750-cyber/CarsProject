@@ -87,4 +87,5 @@ function isStrongPassword(password) {
   }
 }
 
+
 module.exports = { isName, isEmail, isStrongPassword };
