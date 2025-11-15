@@ -8,6 +8,7 @@ const appError = require("./utils/appError.js");
 const statusText = require("./utils/statusText.js");
 const catchError = require("./middlewares/catchError.js");
 const userRoute = require("./routes/user.js");
+const requestRoute = require("./routes/request.js");
 
 const app = express();
 connectDB();
@@ -16,6 +17,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/users", userRoute);
+
+app.use("/requests",requestRoute)
 
 app.use(
   catchError(function (req, res, next) {
