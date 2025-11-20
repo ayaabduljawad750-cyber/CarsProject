@@ -87,5 +87,33 @@ function isStrongPassword(password) {
   }
 }
 
+function isCenterNameOrLocation(name) {
+  if (!name) {
+    const error = appError.create(`${name} is required`, 400, statusText.ERROR);
+    throw error;
+  } else if (name.trim().length < 3) {
+    const error = appError.create(
+      `${name}  must be at least 3 characters`,
+      400,
+      statusText.ERROR
+    );
+    throw error;
+  } else {
+    return true;
+  }
+}
 
-module.exports = { isName, isEmail, isStrongPassword };
+function isPhone(phone) {
+  if (!phone) {
+    const error = appError.create("phone is required", 400, statusText.ERROR);
+    throw error;
+  } else if (!/^[0-9]{10,15}$/.test(phone)) {
+    const error = appError.create("phone must contain 10-15 digits only", 400, statusText.ERROR);
+    throw error;
+  }
+  else{
+    return true
+  }
+}
+
+module.exports = { isName, isEmail, isStrongPassword , isCenterNameOrLocation,isPhone};

@@ -9,6 +9,7 @@ const statusText = require("./utils/statusText.js");
 const catchError = require("./middlewares/catchError.js");
 const userRoute = require("./routes/user.js");
 const requestRoute = require("./routes/request.js");
+const maintenanceCenterRoute = require("./routes/maintenanceCenter.js");
 
 const app = express();
 connectDB();
@@ -19,6 +20,8 @@ app.use(express.json());
 app.use("/users", userRoute);
 
 app.use("/requests",requestRoute)
+
+app.use("/centers",maintenanceCenterRoute)
 
 app.use(
   catchError(function (req, res, next) {
