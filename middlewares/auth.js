@@ -20,4 +20,5 @@ const auth = async (req, res, next) => {
     res.status(401).json({ message: "Session expired, please sign in again." });
   }
 };
+
 module.exports = { auth };

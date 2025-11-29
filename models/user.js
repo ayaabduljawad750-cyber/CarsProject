@@ -24,9 +24,12 @@ const userSchema = mongoose.Schema({
     required: [true, "Password is required"],
     validate: [isStrongPassword, "Not strong password"],
   },
+  verificationCode:{
+    type:String
+  },
   role: {
     type: String,
-    enum: [userRoles.ADMIN, userRoles.USER],
+    enum: [userRoles.ADMIN,userRoles.SELLER,userRoles.MaintenanceCenter, userRoles.USER],
     default: userRoles.USER,
   },
   token: {
@@ -36,4 +39,4 @@ const userSchema = mongoose.Schema({
 
 let userModel = mongoose.model("User", userSchema);
 
-module.exports = userModel;
+module.exports = {userModel};
