@@ -38,7 +38,6 @@ function validationUpdateBooking(obj) {
     service: joi.string().valid("Regular Service", "General Repair", "Other"),
     comment: joi.string().trim().min(3).max(100),
     role: joi.string().trim().min(3).max(100).default("user"),
-    status: joi.string().trim().min(3).max(100).default("pending"),
   });
   return schema.validate(obj);
 }
@@ -141,11 +140,6 @@ const editStatus = asyncHandler(async (req, res) => {
     { message: `Requst is ${req.body.status}`},
   );
 });
-
-
-
-
-// serviceController.js
 
 
 
