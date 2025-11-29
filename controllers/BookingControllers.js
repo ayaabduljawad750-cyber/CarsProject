@@ -31,15 +31,14 @@ function validationUpdateBooking(obj) {
   const schema = joi.object({
     user: joi.string().trim().min(3).max(100),
     userFullName: joi.string().trim().min(3).max(100),
-    userTelephone: joi
-      .string()
-      .pattern(/^\d{11}$/),
+    userTelephone: joi.string().pattern(/^\d{11}$/),
     userEmail: joi.string().trim().min(3).max(100),
     carModel: joi.string().trim().min(3).max(100),
     ModelYear: joi.string().trim().min(4).max(100),
     service: joi.string().valid("Regular Service", "General Repair", "Other"),
     comment: joi.string().trim().min(3).max(100),
     role: joi.string().trim().min(3).max(100).default("user"),
+    status: joi.string().trim().min(3).max(100).default("pending"),
   });
   return schema.validate(obj);
 }
@@ -63,7 +62,10 @@ const makeNewBooking = asyncHandler(async (req, res) => {
   });
 
   const result = await book.save();
-  res.status(201).json(result);
+     res.status(200).json({
+       message: `Wait for the admin to review the request`,
+       result,
+     });
 
  
 });
@@ -90,6 +92,7 @@ const editBooking = asyncHandler(async (req, res) => {
         ModelYear: req.body.ModelYear,
         service: req.body.service,
         comment: req.body.comment,
+       
       },
     },
     {
@@ -119,37 +122,24 @@ const deleteBooking = asyncHandler(
 )
 
 const editStatus = asyncHandler(async (req, res) => {
-
-  
-
-   const { error } = validationUpdateBooking(req.body);
-   if (error) {
-     return res.status(500).json({ message: error.details[0].message });
-   }
-
-
    const book = await BookingMaintenance.findByIdAndUpdate(
      req.params.id,
      {
        $set: {
-         user: req.body.user,
          service:req.body.service,
-         role:req.body.role,
+         role: req.body.role,
+         status: req.body.status
        },
      },
      {
        new: true,
      }
   );
-      if (req.body.role !== "admin") {
-        return res.status(403).json({
-          message: "For Admins only",
-        });
-      }
 
-      res.status(200).json({
-        message: `Wait for the admin to review the request`,  book
-      });
+
+  res.status(200).json(
+    { message: `Requst is ${req.body.status}`},
+  );
 });
 
 
