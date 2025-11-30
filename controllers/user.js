@@ -1,10 +1,10 @@
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const catchError = require("../middlewares/catchError.js");
-const userModel = require("../models/user.js");
-const appError = require("../utils/appError.js");
-const statusText = require("../utils/statusText.js");
-const { isEmail, isName, isStrongPassword } = require("../utils/validate.js");
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import catchError from "../middlewares/catchError.js";
+import userModel from "../models/user.js";
+import appError from "../utils/appError.js";
+import statusText from "../utils/statusText.js";
+import { isEmail, isName, isStrongPassword } from "../utils/validate.js";
 
 const register = catchError(async (req, res, next) => {
   let { firstName, lastName, email, password } = req.body;
@@ -26,7 +26,7 @@ const register = catchError(async (req, res, next) => {
   const oldUser = await userModel.findOne({ email });
 
   if (oldUser) {
-    const error = appError.create("user already exists", 400, statusText.FAIL);
+    const error =  appError.create("user already exists", 400, statusText.FAIL);
     next(error);
     return;
   }
@@ -221,7 +221,7 @@ const deleteUserById = catchError(async (req, res, next) => {
   });
 });
 
-module.exports = {
+export default{
   getUsers,
   getUserById,
   register,

@@ -1,4 +1,4 @@
-const statusText = require("../utils/statusText.js");
+import statusText from "../utils/statusText.js";
 
 let handelError = (error, req, res, next) => {
   res.status(error.statusCode || 500).json({
@@ -9,4 +9,4 @@ let handelError = (error, req, res, next) => {
   });
 };
 
-module.exports = handelError;
+export default handelError;

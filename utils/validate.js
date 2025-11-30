@@ -1,9 +1,9 @@
-const appError = require("./appError.js");
-const statusText = require("./statusText.js");
+import appError from "./appError.js";
+import statusText from"./statusText.js";
 
-function isName(name) {
+export function isName(name) {
   if (!/[A-Z]/.test(name[0])) {
-    const error = appError.create(
+    const error =  appError.create(
       `first letter must be capital in ${name}`,
       400,
       statusText.FAIL
@@ -31,7 +31,7 @@ function isName(name) {
   }
 }
 
-function isEmail(email) {
+export function isEmail(email) {
   if (/^[a-zA-Z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z]{2,})+$/.test(email)) {
     return true;
   } else {
@@ -41,7 +41,7 @@ function isEmail(email) {
   }
 }
 
-function isStrongPassword(password) {
+export function isStrongPassword(password) {
   if (!/\W/.test(password)) {
     const error = appError.create(
       "Password must be contain at least one special character",
@@ -87,4 +87,4 @@ function isStrongPassword(password) {
   }
 }
 
-module.exports = { isName, isEmail, isStrongPassword };
+export default {isName,isEmail,isStrongPassword} 

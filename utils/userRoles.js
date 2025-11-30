@@ -3,4 +3,4 @@ const userRoles = {
   USER: "User",
 };
 
-module.exports = userRoles;
+export default userRoles;

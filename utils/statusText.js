@@ -4,4 +4,4 @@ let statusText = {
   ERROR: "Error",
 };
 
-module.exports = statusText;
+export default statusText;

@@ -6,4 +6,4 @@ let catchError = (asyncFn) => {
   };
 };
 
-module.exports = catchError;
+export default catchError;
