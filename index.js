@@ -14,6 +14,7 @@ import requestRoute from "./routes/request.js";
 import maintenanceCenterRoute from "./routes/maintenanceCenter.js";
 import feedbackRoute from "./routes/feedback.js"
 import reviewRoute from "./routes/review.js"
+import bookingRoute from "./routes/bookingMaintenance.js"
 
 const app = express(); 
 connectDB();
@@ -26,6 +27,7 @@ app.use("/orders",orderRoute)
 app.use("/products",productRoute)
 app.use("/review",reviewRoute)
 app.use("/feedback",feedbackRoute)
+app.use("/booking",bookingRoute)
 
 app.use(catchError(function(req,res,next){
   const error = appError.create("api is not found",404,statusText.FAIL)
