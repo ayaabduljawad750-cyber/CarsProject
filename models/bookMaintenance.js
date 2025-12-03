@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const { isEmail } = require("../utils/validate.js");
+import mongoose from"mongoose";
+import { isEmail } from"../utils/validate.js";
 // const {userModel} = require("../models/user.js");
 // console.log( mongoose.Schema.Types.String.get("firstN"))
 const BookingSchema = new mongoose.Schema(
@@ -80,5 +80,5 @@ const BookingSchema = new mongoose.Schema(
 );
 
 
-const BookingMaintenance = mongoose.model("BookingMaintenance" , BookingSchema)
-module.exports = {BookingMaintenance}
+let BookingMaintenance = mongoose.model("BookingMaintenance" , BookingSchema)
+export default BookingMaintenance

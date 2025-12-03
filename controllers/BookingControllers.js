@@ -1,8 +1,7 @@
-const joi = require("joi");
-const asyncHandler = require("express-async-handler");
-const { BookingMaintenance } = require("../models/bookMaintenance");
-const { userModel } = require("../models/user");
-const { message } = require("../utils/appError");
+import joi from"joi";
+import asyncHandler from"express-async-handler";
+import  BookingMaintenance  from"../models/bookMaintenance.js";
+
 function validation(obj) {
   const schema = joi.object({
     user: joi.string().trim().min(3).max(100),
@@ -113,7 +112,7 @@ const deleteBooking = asyncHandler(
     const booking = BookingMaintenance.findById(req.params.id);
     if (booking) {
       await BookingMaintenance.findByIdAndDelete(req.params.id);
-      res.status(200).json({messsage : "the book was deleted successfully"})
+      res.status(200).json({message : "the book was deleted successfully"})
     } else {
         res.status(404).json({ message: "not found" });
     }
@@ -143,7 +142,7 @@ const editStatus = asyncHandler(async (req, res) => {
 
 
 
-module.exports = {
+export default {
   validation,
   validationUpdateBooking,
   makeNewBooking,

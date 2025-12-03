@@ -1,19 +1,19 @@
-const express = require("express");
-const asyncHandler = require("express-async-handler");
-const {BookingMaintenance} = require("../models/bookMaintenance");
-const {validation ,validationUpdateBooking} = require("../controllers/BookingControllers");
-const router =express.Router();
-const { userModel } = require("../models/user")
-const {makeNewBooking , editBooking , getBooks , deleteBooking ,editStatus} = require("../controllers/BookingControllers")
+import express from"express";
+import asyncHandler from"express-async-handler";
+import BookingMaintenance from"../models/bookMaintenance.js";
+import {validation ,validationUpdateBooking} from"../controllers/BookingControllers.js";
+const bookingRouter =express.Router();
+import userModel from"../models/user.js"
+import controllerBookings from"../controllers/BookingControllers.js"
 
-router.get("/" , getBooks)
+bookingRouter.get("/" , controllerBookings.getBooks)
 
-router.post ("/" , makeNewBooking);
+bookingRouter.post ("/" , controllerBookings.makeNewBooking);
 
-router.put("/:id", editBooking)
+bookingRouter.put("/:id", controllerBookings.editBooking)
 
-router.delete("/:id" , deleteBooking)
+bookingRouter.delete("/:id" , controllerBookings.deleteBooking)
 
-router.put("/completedBookings/:id", editStatus);
+bookingRouter.put("/completedBookings/:id", controllerBookings.editStatus);
 
-module.exports = router
+export default bookingRouter
