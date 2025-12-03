@@ -10,7 +10,11 @@ import catchError from './middlewares/catchError.js';
 import userRoute from './routes/user.js';
 import orderRoute from './routes/order.js';
 import productRoute from './routes/products.js'
-const app = express();
+import requestRoute from "./routes/request.js";
+import maintenanceCenterRoute from "./routes/maintenanceCenter.js";
+
+
+const app = express(); 
 connectDB();
 
 app.use(cors());
@@ -24,6 +28,10 @@ app.use(catchError(function(req,res,next){
   const error = appError.create("api is not found",404,statusText.FAIL)
   next(error)
 }))
+
+app.use("/requests",requestRoute)
+
+app.use("/centers",maintenanceCenterRoute)
 
 app.use(
   catchError(function (req, res, next) {

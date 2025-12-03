@@ -1,4 +1,4 @@
-const mongoose =require("mongoose");
+import mongoose from "mongoose";
 const productSchema= mongoose.Schema({
     name:{
         type:String,
@@ -16,8 +16,7 @@ const productSchema= mongoose.Schema({
         maxlength: [50, "Product name cannot exceed 50 characters"],
         index:true,
         uppercase:true
-
-    },
+},
     carModel:{
         type:String,
         required:[true,"Car model is required."],
@@ -123,7 +122,6 @@ set:v=>v.trim().replace(/\s+/g, " ")
             "Bumper Parts":["Bumper Holder","Bumper","Bumper Reinforcement"],
             "Wipers Blades Parts":["Washer water tank"],
             "Wires & Bolts":["Nut-Road Wheel"],
-
             "Gaskets":["Cylinder Head Cover Gasket","Engine Cover Gasket"],
             "oil seal":["Camshaft Oil Seal"],
             "Engine Spare parts":["Engine cable","Engine Mount","Cooling Water Pump","Engine Oil Pump","Steering Fluid Pump","Chain drive","Engine Belt Tensioner","Accelerator Wire","Oil Gauge"],
@@ -138,8 +136,6 @@ set:v=>v.trim().replace(/\s+/g, " ")
             "Suspension System":["Shock Absorber Coil Spring Mounting","Universal joint","Arm","Shock Absorber","Stabilizer Link Bush Rubber","Shock Absorber Boot","Steering Gear Box","Control Arm","Control Arm Bush","Stabilizer Link","Control Arm Ball Joint","Shock Absorber Mount","Steering Wheel Tie Rod","Suspension Beam Bush Rubber"],
             "Belts":["Belt Tensioner","Outer Belt","Steering Pump Belt","A/C Tensioner Pulley","Outer Belt Tensioner","A/C Compressor Belt","Alternator Belt","Timing Belt","Engine Belt","Engine Outer Belts"],
             "Filters":["Oil Filter Element","Engine Oil Filter","A/C Filter","Fuel Filter","Transmission Oil Filter","Air Filter"]
-
-
         };
 
 
@@ -158,4 +154,4 @@ productSchema.pre("save", function(next) {
 });
 
 const productModel = mongoose.model("products", productSchema);
-module.exports = productModel;
+export default productModel;

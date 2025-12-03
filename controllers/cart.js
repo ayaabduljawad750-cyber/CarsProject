@@ -1,6 +1,4 @@
-import userModel from "../models/user";
-import productModel from "../models/Products";
-import cartModel from "../models/cart";
+import cartModel from "../models/cart.js";
 import mongoose from "mongoose";
 
 const getAllCart =async(req ,res)=>{

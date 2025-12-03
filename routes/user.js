@@ -1,18 +1,36 @@
-import express  from "express";
-import userController from "../controllers/user.js";
+import express from "express";
+import userControl from "../controllers/user.js";
+
+import userRoles from "../utils/userRoles.js"
+
+import auth from "../middlewares/auth.js"
+import authorize from "../middlewares/authorization.js"
 
 let userRoute = express.Router();
 
-userRoute.post("/register", userController.register);
+userRoute.post("/register", userControl.register);
 
-userRoute.post("/login", userController.login);
+userRoute.post("/login", userControl.login);
 
-userRoute.get("/", userController.getUsers);
+userRoute.get("/",auth, authorize(userRoles.ADMIN),userControl.getUsers);
 
-userRoute.get("/:id", userController.getUserById);
+userRoute.get("/get",auth,userControl.getUserById)
 
-userRoute.put("/:id", userController.updateUserById);
+userRoute.get("/:id",auth,authorize(userRoles.ADMIN), userControl.getUserById);
 
-userRoute.delete("/:id", userController.deleteUserById);
+userRoute.put("/update",auth,userControl.updateUserById)
+
+userRoute.put("/update/password",auth,userControl.updatePasswordById)
+
+userRoute.put("/:id",auth,authorize(userRoles.ADMIN), userControl.updateUserById);
+
+userRoute.delete("/delete",auth,userControl.deleteUserById)
+
+userRoute.delete("/:id",auth,authorize(userRoles.ADMIN), userControl.deleteUserById);
+
+// for forget password function 
+userRoute.post("/send/verificationCode",userControl.sendVerificationCode)
+userRoute.post("/verify/verificationCode",userControl.verifyVerificationCode)
+userRoute.post("/change/password",userControl.changePassword)
 
 export default userRoute;

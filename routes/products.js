@@ -1,20 +1,14 @@
 import express from "express";
-const router = express.Router();
-import {  
-    CreateNewProduct,
-    updateProduct,
-    deleteProduct,
-    getAllProducts,
-    getProductById,
-    getFilteredProducts
-} from "../controllers/products";
-import { auth } from "../middlewares/auth";
+import controlProduct from "../controllers/products.js";
+import auth from "../middlewares/auth.js";
 
-router.post("/", auth, CreateNewProduct);
-router.put("/:id", auth, updateProduct);
-router.delete("/:id", auth, deleteProduct);
-router.get("/", getFilteredProducts);
-router.get("/all", auth, getAllProducts);
-router.get("/:id", getProductById);
+const productRoute = express.Router();
 
-export default router;
+productRoute.post("/", auth, controlProduct.CreateNewProduct);
+productRoute.put("/:id", auth, controlProduct.updateProduct);
+productRoute.delete("/:id", auth, controlProduct.deleteProduct);
+productRoute.get("/", controlProduct.getFilteredProducts);
+productRoute.get("/all", auth, controlProduct.getAllProducts);
+productRoute.get("/:id", controlProduct.getProductById);
+
+export default productRoute;

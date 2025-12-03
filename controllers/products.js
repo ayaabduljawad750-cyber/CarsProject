@@ -1,5 +1,4 @@
-import userModel from"../models/user";
-import productModel from"../models/Products";
+import productModel from"../models/Products.js";
 import mongoose from "mongoose";
 
 const CreateNewProduct =async(req , res)=>{

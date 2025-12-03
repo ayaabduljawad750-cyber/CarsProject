@@ -1,7 +1,7 @@
 import appError from "./appError.js";
 import statusText from"./statusText.js";
 
-export function isName(name) {
+ function isName(name) {
   if (!/[A-Z]/.test(name[0])) {
     const error =  appError.create(
       `first letter must be capital in ${name}`,
@@ -31,7 +31,7 @@ export function isName(name) {
   }
 }
 
-export function isEmail(email) {
+ function isEmail(email) {
   if (/^[a-zA-Z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z]{2,})+$/.test(email)) {
     return true;
   } else {
@@ -41,7 +41,7 @@ export function isEmail(email) {
   }
 }
 
-export function isStrongPassword(password) {
+ function isStrongPassword(password) {
   if (!/\W/.test(password)) {
     const error = appError.create(
       "Password must be contain at least one special character",
@@ -87,4 +87,33 @@ export function isStrongPassword(password) {
   }
 }
 
-export default {isName,isEmail,isStrongPassword} 
+function isCenterNameOrLocation(name) {
+  if (!name) {
+    const error = appError.create(`${name} is required`, 400, statusText.ERROR);
+    throw error;
+  } else if (name.trim().length < 3) {
+    const error = appError.create(
+      `${name}  must be at least 3 characters`,
+      400,
+      statusText.ERROR
+    );
+    throw error;
+  } else {
+    return true;
+  }
+}
+
+function isPhone(phone) {
+  if (!phone) {
+    const error = appError.create("phone is required", 400, statusText.ERROR);
+    throw error;
+  } else if (!/^[0-9]{10,15}$/.test(phone)) {
+    const error = appError.create("phone must contain 10-15 digits only", 400, statusText.ERROR);
+    throw error;
+  }
+  else{
+    return true
+  }
+}
+
+export  { isName, isEmail, isStrongPassword , isCenterNameOrLocation,isPhone};

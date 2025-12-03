@@ -1,32 +1,37 @@
 import mongoose from "mongoose";
-import validation from "../utils/validate.js";
+import {
+  isEmail,isStrongPassword,isName,
+} from "../utils/validate.js";
 import userRoles from "../utils/userRoles.js";
 
 const userSchema = mongoose.Schema({
   firstName: {
     type: String,
     required: [true, "First name is required"],
-    validate: [validation.isName, "Invalid Name"],
+    validate: [isName, "Invalid Name"],
   },
   lastName: {
     type: String,
     required: [true, "Last name is required"],
-    validate: [validation.isName, "Invalid Name"],
+    validate: [isName, "Invalid Name"],
   },
   email: {
     type: String,
     required: [true, "Email is required"],
     unique: [true, "email already exists"],
-    validate: [validation.isEmail, "Invalid Email"],
+    validate: [isEmail, "Invalid Email"],
   },
   password: {
     type: String,
     required: [true, "Password is required"],
-    validate: [validation.isStrongPassword, "Not strong password"],
+    validate: [isStrongPassword, "Not strong password"],
+  },
+  verificationCode:{
+    type:String
   },
   role: {
     type: String,
-    enum: [userRoles.ADMIN, userRoles.USER],
+    enum: [userRoles.ADMIN,userRoles.SELLER,userRoles.MaintenanceCenter, userRoles.USER],
     default: userRoles.USER,
   },
   token: {

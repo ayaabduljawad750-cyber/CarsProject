@@ -1,25 +1,16 @@
 import express from ("express");
-const router = express.Router();
-import {  
-    getAllCart,
-    getCartById,
-    getCartByUserId,
-    updateCartById,
-    updateCartByUserId,
-    deleteById,
-    deleteByUserId,
-    createCart
-} from ("../controllers/cart");
-import { auth } from ("../middlewares/auth");
+const cartRoute = express.Router();
+import cartControl from ("../controllers/cart.js");
+import  auth  from ("../middlewares/auth.js");
 
-router.post("/",auth, createCart);
-router.put("/user/:userId", auth, updateCartByUserId);
-router.put("/:id", auth, updateCartById);
-router.delete("/user/:userId",auth, deleteByUserId);
-router.delete("/:id", auth, deleteById);
-router.get("/", auth, getAllCart);
-router.get("/user/:userId",auth, getCartByUserId);
-router.get("/:id",auth, getCartById);
+cartRoute.post("/",auth, cartControl.createCart);
+cartRoute.put("/user/:userId", auth, cartControl.updateCartByUserId);
+cartRoute.put("/:id", auth, cartControl.updateCartById);
+cartRoute.delete("/user/:userId",auth, cartControl.deleteByUserId);
+cartRoute.delete("/:id", auth, cartControl.deleteById);
+cartRoute.get("/", auth, cartControl.getAllCart);
+cartRoute.get("/user/:userId",auth, cartControl.getCartByUserId);
+cartRoute.get("/:id",auth, cartControl.getCartById);
 
 
-module.exports = router;
+export default cartRoute;
