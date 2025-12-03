@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from"mongoose";
 
 const reviewSchema = new mongoose.Schema({
     userId:{
@@ -31,4 +31,6 @@ const reviewSchema = new mongoose.Schema({
 })
 
 
-module.exports = mongoose.model("Review", reviewSchema);
+let reviewModel = mongoose.model("Review", reviewSchema);
+
+export default reviewModel

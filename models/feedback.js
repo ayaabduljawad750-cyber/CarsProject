@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from"mongoose";
  const feedbackSchema = new mongoose.Schema({
     userId:{
         type:mongoose.Schema.Types.ObjectId,
@@ -25,4 +25,6 @@ const mongoose = require("mongoose");
     }
     })
 
-    module.exports = mongoose.model("Feedback", feedbackSchema);
+  let feedbackModel = mongoose.model("Feedback", feedbackSchema);
+
+  export default feedbackModel

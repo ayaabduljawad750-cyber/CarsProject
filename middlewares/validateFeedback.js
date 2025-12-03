@@ -1,6 +1,4 @@
-const Feedback = require("../models/feedback");
-const User = require("../models/user");
-const Product = require("../models/product");
+import Feedback from"../models/feedback";
 
 const validateFeedback = (req, res, next) => {
     const { product, comment } = req.body;
@@ -36,7 +34,7 @@ const checkOwnerOrAdminDelete = async (req, res, next) => {
     }
     next();
 };
-module.exports = {
+export default {
     validateFeedback,
     checkOwnerUpdate,
     checkOwnerOrAdminDelete

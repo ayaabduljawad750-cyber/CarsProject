@@ -1,21 +1,16 @@
-const express = require("express");
-const router = express.Router();
+import express from"express";
+const feedBackRouter = express.Router();
 
-const {
-    createFeedback,
-    updateFeedback,
-    deleteFeedback,
-    getFeedback,
-    getallFeedback
-} = require("../controllers/feedback")
+import controllerFeedbacks from"../controllers/feedback.js"
 
 const auth = require("../middleware/auth");
 const { validateFeedback, checkOwnerUpdate, checkOwnerOrAdminDelete } = require("../middleware/validateFeedback");
 
-router.post("/", auth, validateFeedback, createFeedback);
-router.put("/:id", auth, checkOwnerUpdate, updateFeedback);
-router.delete("/:id", auth, checkOwnerOrAdminDelete, deleteFeedback);
-router.get("/:id", getFeedback);
-router.get("/", getAllFeedback);
+feedBackRouter.post("/", auth, validateFeedback, controllerFeedbacks.createFeedback);
+feedBackRouter.put("/:id", auth, checkOwnerUpdate, controllerFeedbacks.updateFeedback);
+feedBackRouter.delete("/:id", auth, checkOwnerOrAdminDelete, controllerFeedbacks.deleteFeedback);
+feedBackRouter.get("/", controllerFeedbacks.getAllFeedback);
+feedBackRouter.get("/:id", controllerFeedbacks.getFeedbackById);
 
-module.exports = router;
+
+export default feedBackRouter;

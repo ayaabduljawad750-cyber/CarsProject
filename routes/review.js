@@ -1,22 +1,16 @@
-const express = require("express");
-const router = express.Router();
+import express from"express";
+const reviewRouter = express.Router();
 
-const {
-    createReview,
-    updateReview,
-    deleteReview,
-    getReviewById,
-    getProductRating
-} = require("../controllers/review")
+import controllerReview from"../controllers/review.js"
 
-const auth = require("../middleware/auth");
-const validateReview = require("../middleware/validateReview");
-const checkReview = require("../middleware/checkReview");
+import auth from"../middleware/auth";
+import validateReview from"../middleware/validateReview";
+import checkReview from"../middleware/checkReview";
 
-router.post("/", auth, validateReview, createReview);
-router.put("/:id", auth, checkOwnerUpdate,updateReview);
-router.delete("/:id", auth, checkOwnerOrAdminDelete, deleteReview);
-router.get("/:id", getReviewById);
-router.get("/product/:productId/rating", getProductRating);
+reviewRouter.post("/", auth, validateReview, createReview);
+reviewRouter.put("/:id", auth, checkOwnerUpdate,updateReview);
+reviewRouter.delete("/:id", auth, checkOwnerOrAdminDelete, deleteReview);
+reviewRouter.get("/:id", getReviewById);
+reviewRouter.get("/product/:productId/rating", getProductRating);
 
-module.exports = router;
+export default reviewRouter;

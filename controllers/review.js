@@ -1,8 +1,8 @@
-const Review = require("../models/review");
-const User = require("../models/user");
- const Product = require("../models/product");
+import Review from"../models/review";
+import User from"../models/user";
+import Product from"../models/product";
 
-exports.createReview = async (req, res) => {
+createReview = async (req, res) => {
   try{
     const userId = req.userId;
     const {product, evaluation } = req.body;
@@ -22,7 +22,7 @@ exports.createReview = async (req, res) => {
       return res.status(400).json({ message: "You have already reviewed this product" });
     }
 
-//Ceate Review
+//Create Review
         const review = await Review.create({userId, product, evaluation});
         return res.status(201).json(review);
     }catch(err){
@@ -30,7 +30,7 @@ exports.createReview = async (req, res) => {
     }
 };
 //Update Review
-exports.updateReview = async (req, res) => {
+updateReview = async (req, res) => {
     try{
         const review = await Review.findByIdAndUpdate(
             req.params.id,
@@ -44,7 +44,7 @@ exports.updateReview = async (req, res) => {
     }
 };
 // Delete Review
-exports.deleteReview = async (req, res) => {
+deleteReview = async (req, res) => {
   try {
     const review = await Review.findByIdAndDelete(req.params.id);
     if (!review) return res.status(404).json({ message: "Review not found" });
@@ -56,7 +56,7 @@ exports.deleteReview = async (req, res) => {
 };
 
 // Get Review by ID
-exports.getReviewById = async (req, res) => {
+getReviewById = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id)
     if (!review) return res.status(404).json({ message: "Not found" });
@@ -69,7 +69,7 @@ exports.getReviewById = async (req, res) => {
 };
 
 // Get Product Rating (average)
-exports.getProductRating = async (req, res) => {
+getProductRating = async (req, res) => {
   try {
     const productId = req.params.productId;
 
@@ -97,3 +97,11 @@ exports.getProductRating = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export default {
+  getProductRating,
+  getReviewById,
+  deleteReview,
+  updateReview,
+  createReview
+}
