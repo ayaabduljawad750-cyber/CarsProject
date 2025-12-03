@@ -9,7 +9,7 @@ import statusText from './utils/statusText.js';
 import catchError from './middlewares/catchError.js';
 import userRoute from './routes/user.js';
 import orderRoute from './routes/order.js';
-
+import productRoute from './routes/products.js'
 const app = express();
 connectDB();
 
@@ -18,6 +18,7 @@ app.use(express.json());
 
 app.use("/users",userRoute)
 app.use("/orders",orderRoute)
+app.use("/products",productRoute)
 
 app.use(catchError(function(req,res,next){
   const error = appError.create("api is not found",404,statusText.FAIL)
