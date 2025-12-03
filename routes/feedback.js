@@ -3,8 +3,8 @@ const feedBackRouter = express.Router();
 
 import controllerFeedbacks from"../controllers/feedback.js"
 
-const auth = require("../middleware/auth");
-const { validateFeedback, checkOwnerUpdate, checkOwnerOrAdminDelete } = require("../middleware/validateFeedback");
+import auth from"../middleware/auth";
+import { validateFeedback, checkOwnerUpdate, checkOwnerOrAdminDelete} from"../middleware/validateFeedback";
 
 feedBackRouter.post("/", auth, validateFeedback, controllerFeedbacks.createFeedback);
 feedBackRouter.put("/:id", auth, checkOwnerUpdate, controllerFeedbacks.updateFeedback);

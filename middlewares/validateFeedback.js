@@ -1,4 +1,4 @@
-import Feedback from"../models/feedback";
+import Feedback from"../models/feedback.js";
 
 const validateFeedback = (req, res, next) => {
     const { product, comment } = req.body;

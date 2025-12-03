@@ -1,6 +1,6 @@
-import Feedback from "../models/feedback";
-import User from "../models/user";
-import Product from "../models/product";
+import Feedback from "../models/feedback.js";
+import User from "../models/user.js";
+import Product from "../models/product.js";
 
 createFeedback = async (req, res) => {
   try {

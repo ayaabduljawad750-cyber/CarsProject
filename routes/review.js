@@ -3,9 +3,9 @@ const reviewRouter = express.Router();
 
 import controllerReview from"../controllers/review.js"
 
-import auth from"../middleware/auth";
-import validateReview from"../middleware/validateReview";
-import checkReview from"../middleware/checkReview";
+import auth from"../middleware/auth.js";
+import validateReview from"../middleware/validateReview.js";
+import checkReview from"../middleware/checkReview.js";
 
 reviewRouter.post("/", auth, validateReview, createReview);
 reviewRouter.put("/:id", auth, checkOwnerUpdate,updateReview);
