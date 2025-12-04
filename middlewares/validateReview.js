@@ -1,4 +1,4 @@
-const Review = require("../models/review");
+import Review from"../models/review.js";
 const validateReview = (req, res, next) => {
   const { product, evaluation } = req.body;
   if (!product) {
@@ -26,7 +26,7 @@ const checkOwnerOrAdminDelete = async (req,res,next) => {
     return res.status(403).json({message:"Not authorized to delete"});
   next();
 };
-module.exports = {
+export {
   validateReview,
   checkOwnerUpdate,
   checkOwnerOrAdminDelete
