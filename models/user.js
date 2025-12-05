@@ -37,6 +37,10 @@ const userSchema = mongoose.Schema({
   token: {
     type: String,
   },
+  commercial:{
+    data: Buffer,        // ✅ image stored here
+    contentType: String
+  }
 });
 
 let userModel = mongoose.model("User", userSchema);

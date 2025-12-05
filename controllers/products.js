@@ -1,164 +1,335 @@
-import productModel from"../models/Products.js";
-import mongoose from "mongoose";
+import catchError from "../middlewares/catchError.js";
+import productModel from "../models/Products.js";
+import appError from "../utils/appError.js";
+import statusText from "../utils/statusText.js";
+import { testText } from "../utils/validate.js";
 
-const CreateNewProduct =async(req , res)=>{
-    if(req.user.role !=="admin"&& req.user.role !== "seller"){
-    return res.status(403).json({message:"admins and sallers only"})
-    }
-    const newProduct=req.body;
-    if (!newProduct) {
-    res.status(401).json("plz enter the product");
-    } else {
-    
-    const product = await productModel.create({
-    ...newProduct,
-    seller: req.user.id,
-    });
-    res.status(200).json({ message: "new product created", data: product });
-    }
-};
+const createProduct = catchError(async (req, res, next) => {
+  const sellerId = req.user.id;
+  const { name, brand, carModel, price, stock, description, category } =
+    req.body;
 
-const updateProduct = async(req,res)=>{
-
-    try {
-    const id = req.params.id;
-    const updateProduct = req.body;
-
-    if (!updateProduct || Object.keys(updateProduct).length===0) {
-    return res.status(400).json({message: "Please enter the updated information"});
-    }
-    const product = await productModel.findById(id); 
-    if (!product) {
-    return res.status(404).json({ message: "product not found" });
-    }
-    if (req.user.role === "seller"){
-        if(product.seller.toString() !== req.user.id){
-            return res.status(403).json({ message: "You cannot update this product" });
-        }}
-
- else if(req.user.role !=="admin"){
-     return res.status(403).json({ message: "You cannot update products" });
- }
-  Object.assign(product,updateProduct);
-  await product.save();
-
-  res.status(200).json({ message: "Product updated", data: product });
-    }
-  catch (err) {
-    res.status(500).json({ message: "Error when updating product." });
+  if (!name || !price || !stock || !category) {
+    const error = appError.create(
+      "name , price , stock and category are required",
+      400,
+      statusText.FAIL
+    );
+    next(error);
+    return;
   }
-  
+
+  testText(name);
+  if (brand) {
+    testText(brand);
+  }
+  if (carModel) {
+    testText(carModel);
+  }
+  if (price <= 0) {
+    const error = appError.create(
+      "Price must be greater than 0",
+      400,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+  if (stock < 0) {
+    const error = appError.create(
+      "Stock must be 0 or more",
+      400,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+  const allowedCategories = [
+    "Spare parts",
+    "Tyres",
+    "Engine oil",
+    "Batteries",
+    "Liquids",
+  ];
+  if (!allowedCategories.includes(category)) {
+    const error = appError.create(
+      `${category} is invalid category`,
+      400,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+  if (!req.file) {
+    const error = appError.create(
+      "Product image is required",
+      400,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+  const product = {
+    name,
+    brand,
+    carModel,
+    price,
+    stock,
+    description,
+    category,
+    sellerId,
+    image: {
+      data: req.file.buffer,
+      contentType: req.file.mimetype,
+    },
   };
 
-    const deleteProduct =async(req,res) => {
-    try{
-    const id = req.params.id;
+  await productModel.insertOne({ ...product });
 
-    const product = await productModel.findById(id); 
-    if (!product) {
-    return res.status(404).json({ message: "product not found" });
+  res.status(201).json({
+    status: statusText.SUCCESS,
+    message: "create product successfully",
+    code: 201,
+    data: product,
+  });
+});
+
+const getProducts = catchError(async (req, res, next) => {
+  const {
+    category,
+    brand,
+    carModel,
+    minPrice,
+    maxPrice,
+    inStock,
+    sortBy,
+    page = 1,
+    limit = 10,
+  } = req.query;
+
+  const filter = {};
+
+  /* ================= FILTERS ================= */
+
+  if (category) {
+    filter.category = category;
+  }
+
+  if (brand) {
+    filter.brand = new RegExp(brand, "i"); // case-insensitive
+  }
+
+  if (carModel) {
+    filter.carModel = new RegExp(carModel, "i");
+  }
+
+  if (minPrice || maxPrice) {
+    filter.price = {};
+    if (minPrice) filter.price.$gte = Number(minPrice);
+    if (maxPrice) filter.price.$lte = Number(maxPrice);
+  }
+
+  if (inStock === "true") {
+    filter.stock = { $gt: 0 };
+  }
+
+  /* ================= SORTING ================= */
+
+  let sort = {};
+
+  if (sortBy === "high-eval") {
+    sort.evaluation = -1; // High to Low
+  }
+
+  if (sortBy === "low-eval") {
+    sort.evaluation = 1; // Low to High
+  }
+
+  if (sortBy === "name-asc") {
+    sort.name = 1; // A → Z
+  }
+
+  if (sortBy === "name-desc") {
+    sort.name = -1; // Z → A
+  }
+
+  if (sortBy === "price-high") {
+    sort.price = -1;
+  }
+
+  if (sortBy === "price-low") {
+    sort.price = 1;
+  }
+
+  if (sortBy === "latest") {
+    sort.createdAt = -1;
+  }
+
+  if (sortBy === "oldest") {
+    sort.createdAt = 1;
+  }
+
+  /* ================= PAGINATION ================= */
+
+  const skip = (page - 1) * limit;
+
+  const products = await productModel
+    .find({ ...filter })
+    .sort(sort)
+    .skip(skip)
+    .limit(Number(limit))
+    .populate("sellerId", "firstName lastName email");
+
+  const total = await productModel.countDocuments({ ...filter });
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "products are here",
+    code: 200,
+    data: {
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
+      products,
+    },
+  });
+});
+
+const getProductById = catchError(async (req, res, next) => {
+  const productId = req.params.id;
+  const product = await productModel
+    .findById(productId)
+    .populate("sellerId", "firstName lastName email");
+  if (!product) {
+    const error = appError.create("Product not found", 404, statusText.FAIL);
+    next(error);
+    return;
+  }
+
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "product is here",
+    code: 200,
+    data: { product },
+  });
+});
+
+const updateProductById = catchError(async (req, res, next) => {
+  const userId = req.user.id;
+  const productId = req.params.id;
+  const product = await productModel.findById(productId);
+  if (!product) {
+    const error = appError.create("Product not found", 404, statusText.FAIL);
+    next(error);
+    return;
+  }
+  if (product.sellerId != userId) {
+    const error = appError.create(
+      "this product is not yours so you can not update it",
+      401,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+
+  const updates = req.body;
+  if (updates.name) {
+    testText(updates.name);
+  }
+  if (updates.brand) {
+    testText(updates.brand);
+  }
+  if (updates.carModel) {
+    testText(updates.carModel);
+  }
+  if (updates.price && updates.price <= 0) {
+    const error = appError.create(
+      "Price must be greater than 0",
+      400,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+  if (updates.stock && updates.stock < 0) {
+    const error = appError.create(
+      "Stock cannot be negative",
+      400,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+  if (updates.category) {
+    const allowedCategories = [
+      "Spare parts",
+      "Tyres",
+      "Engine oil",
+      "Batteries",
+      "Liquids",
+    ];
+    if (!allowedCategories.includes(updates.category)) {
+      const error = appError.create("Invalid category", 400, statusText.FAIL);
+      next(error);
+      return;
+    }
+  }
+
+  if (req.file) {
+    updates.image = {
+      data: req.file.buffer,
+      contentType: req.file.mimetype,
     };
-    if (req.user.role === "seller"){
-        if(product.seller.toString() !== req.user.id){
-            return res.status(403).json({ message: "You cannot Delete this product" });
-        }}
-    else if(req.user.role !=="admin"){
-    return res.status(403).json({ message: "You cannot Deleted products" });
-    }
-    await productModel.deleteOne({ _id: id });
-    return res.status(200).json({ message: "Product deleted successfully" });
+  }
 
+  updates.lastUpdateAt = Date.now();
 
-    }
-    catch(err){
-    res.status(500).json({ message: "Error when Deleting product." });
-}};
+  await productModel.findByIdAndUpdate(productId, updates, {
+    new: true,
+    runValidators: true,
+  });
 
-const getAllProducts=async(req,res)=>{
-    try{
-    if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Access denied: admin only" });
-    }
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "update successfully",
+    code: 200,
+    data: null,
+  });
+});
 
-    const filter= {};
-    if (req.query.category) filter.category = req.query.category;
+const deleteProductById = catchError(async (req, res, next) => {
+  const userId = req.user.id;
+  const productId = req.params.id;
+  const product = await productModel.findById(productId);
+  if (!product) {
+    const error = appError.create("Product not found", 404, statusText.FAIL);
+    next(error);
+    return;
+  }
+  if (product.sellerId != userId) {
+    const error = appError.create(
+      "this product is not yours so you can not delete it",
+      401,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
 
+  await productModel.findByIdAndDelete(productId)
 
-    const sort={};
-    if(req.query.sortBy) sort[req.query.sortBy] = req.query.order === "desc" ? -1 : 1;
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "deleted successfully",
+    code: 200,
+    data: null,
+  });
+});
 
-    const products = await productModel.find(filter).skip(skip).limit(limit).sort(sort);
-    
-    const total = await productModel.countDocuments(filter);
-
-    return res.status(200).json({
-        message:"All products",
-        page,
-        limit,
-        total,
-        data:products,
-    });
-    }catch(err){
-    res.status(500).json({ message: "Error getting products" });
-    }};
-
-
-    const getProductById=async (req,res)=>{
-try{
-    const {id}=req.params;
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(400).json({message:"Invalid product ID"});
-    }
-    const product=await productModel.findById(id);
-    if(!product){
-        return res.status(404).json({message:"product not found"});
-    }
-    res.status(200).json({message:"product found",data:product})
-
-    }catch(err){
-    res.status(500).json({ message: "Error while retrieving product" });
-}};
-
-
-    const getFilteredProducts =async(req,res)=>{
-        try{
-            const{name,
-                brand,
-                carModel,
-                minPrice,maxPrice,
-                description,
-                }=req.query;
-
-                const filter={};
-
-                if(name) filter.name={ $regex: name, $options: "i" }
-                if(brand) filter.brand={$regex: brand, $options: "i"}
-                if(carModel) filter.carModel={$regex: carModel, $options: "i"}
-                if(description) filter.description={$regex: description, $options: "i"}
-                if(minPrice || maxPrice) {
-                    filter.price ={};
-                    if(minPrice) filter.price.$gte =Number(minPrice);
-                    if(maxPrice) filter.price.$lte =Number(maxPrice);
-                }
-                const products =await productModel.find(filter);
-                res.status(200).json(products);
-        }catch(err){
-                res.status(500).json({ message: "Error while retrieving products" });
-        }
-    };
-
-
-    export default{
-    CreateNewProduct,
-    updateProduct,
-    deleteProduct,
-    getAllProducts,
-    getProductById,
-    getFilteredProducts};
-
-
-
-
+export default {
+  createProduct,
+  getProducts,
+  updateProductById,
+  getProductById,
+  deleteProductById
+};

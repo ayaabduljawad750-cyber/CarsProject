@@ -1,46 +1,37 @@
 import mongoose from "mongoose";
-const cartschema=mongoose.Schema({
 
-    userId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User",
-        required:true,
-        index:true,
-        immutable: true
+const cartSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+
+  items: [
+    {
+      productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        default:1,
+        min: 1,
+      },
     },
-    items:[
-        {product:{type:mongoose.Schema.Types.ObjectId,
-            ref:"Product",
-            required:true,
-            
-        },
-        price: {
-            type:Number,
-            required:true,
-            min:0
-            },
-        quantity:{
-            type:Number,
-            required:true,
-            min:1
-        }
-    }],
-    totalPrice:{
-        type:Number,
-        required:true,
-        min:0,
+  ],
 
-    },
-    
-},
-{ timestamps: true }
-);
+  totalPrice: {
+    type: Number,
+    default: 0,
+  },
 
-
-cartschema.pre("save", function(next) {
-     this.totalPrice = this.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-    next();
+  createdAt: { type: Date, default: Date.now },
+  lastUpdateAt: { type: Date, default: Date.now },
 });
 
-const cartModel = mongoose.model("cart", cartschema);
-export default cartModel;
+let cartModel = mongoose.model("Cart", cartSchema);
+
+export default cartModel

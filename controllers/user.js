@@ -6,6 +6,7 @@ import appError from "../utils/appError.js";
 import statusText from "../utils/statusText.js";
 import { isEmail, isName, isStrongPassword } from "../utils/validate.js";
 import transporterStore from "../utils/transporterStore.js";
+import userRoles from "../utils/userRoles.js";
 
 const register = catchError(async (req, res, next) => {
   let { firstName, lastName, email, password } = req.body;
@@ -27,19 +28,41 @@ const register = catchError(async (req, res, next) => {
   const oldUser = await userModel.findOne({ email });
 
   if (oldUser) {
-    const error =  appError.create("user already exists", 400, statusText.FAIL);
+    const error = appError.create("user already exists", 400, statusText.FAIL);
     next(error);
     return;
   }
 
   const hashPassword = await bcrypt.hash(password, 10);
 
-  const newUser = await userModel.insertOne({
-    firstName,
-    lastName,
-    email,
-    password: hashPassword,
-  });
+  let newUser;
+  if (req.file) {
+    let role = req.body.role
+    if(role!=userRoles.MaintenanceCenter&&role!=userRoles.SELLER){
+      const error = appError.create(`${role} is not valid role`,400,statusText.FAIL)
+      next(error)
+      return
+    }
+    const commercial = {
+      data:req.file.buffer,
+      contentType:req.file.mimetype
+    }
+    newUser=await userModel.insertOne({
+      firstName,
+      lastName,
+      email,
+      password:hashPassword,
+      role,
+      commercial
+    })
+  } else {
+    newUser = await userModel.insertOne({
+      firstName,
+      lastName,
+      email,
+      password: hashPassword,
+    });
+  }
 
   res.status(201).json({
     status: statusText.SUCCESS,
@@ -85,7 +108,6 @@ const login = catchError(async (req, res, next) => {
       role: user.role,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" } 
   );
 
   // add token in user collection
@@ -147,7 +169,10 @@ const getUsers = catchError(async (req, res, next) => {
 const getUserById = catchError(async (req, res, next) => {
   const userId = req.params.id || req.user.id;
 
-  const user = await userModel.findById(userId,{password:false,token:false});
+  const user = await userModel.findById(userId, {
+    password: false,
+    token: false,
+  });
   if (!user) {
     const error = appError.create("user is not found", 404, statusText.FAIL);
     next(error);
@@ -370,16 +395,17 @@ const changePassword = catchError(async (req, res, next) => {
 
   const hashPassword = await bcrypt.hash(newPassword, 10);
 
-  await userModel.updateOne({ email }, { $set: { password: hashPassword ,verificationCode:""} });
+  await userModel.updateOne(
+    { email },
+    { $set: { password: hashPassword, verificationCode: "" } }
+  );
 
-  res
-    .status(200)
-    .json({
-      status: statusText.SUCCESS,
-      message: "password changed successfully",
-      code: 200,
-      data: null,
-    });
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "password changed successfully",
+    code: 200,
+    data: null,
+  });
 });
 
 const deleteUserById = catchError(async (req, res, next) => {

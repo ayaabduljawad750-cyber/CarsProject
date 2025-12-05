@@ -15,6 +15,7 @@ import maintenanceCenterRoute from "./routes/maintenanceCenter.js";
 import feedbackRoute from "./routes/feedback.js"
 import reviewRoute from "./routes/review.js"
 import bookingRoute from "./routes/bookingMaintenance.js"
+import cartRoute from "./routes/cart.js";
 
 const app = express(); 
 connectDB();
@@ -25,18 +26,20 @@ app.use(express.json());
 app.use("/users",userRoute)
 app.use("/orders",orderRoute)
 app.use("/products",productRoute)
+app.use("/cart",cartRoute)
 app.use("/review",reviewRoute)
 app.use("/feedback",feedbackRoute)
 app.use("/booking",bookingRoute)
+app.use("/requests",requestRoute)
+
+app.use("/centers",maintenanceCenterRoute)
+
 
 app.use(catchError(function(req,res,next){
   const error = appError.create("api is not found",404,statusText.FAIL)
   next(error)
 }))
 
-app.use("/requests",requestRoute)
-
-app.use("/centers",maintenanceCenterRoute)
 
 app.use(
   catchError(function (req, res, next) {
