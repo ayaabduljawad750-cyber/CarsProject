@@ -19,11 +19,10 @@ const reviewSchema = new mongoose.Schema({
             validator: Number.isInteger,
             message: "Evaluation must be an integer"
         },
-        required: [true, "Evaluation is required"]
     },
     createdAt:{
         type: Date,
-        default: Date.now
+        default: Date.now()
     },
     lastUpdateAt:{
         type: Date

@@ -14,11 +14,10 @@ import mongoose from"mongoose";
         type: String,
         maxlength:[150, "Comment cannot exceed 150 characters"],
         trim: true,
-        required:[true, "Feedback is required"]
     },
     createdAt:{
         type: Date,
-        default: Date.now
+        default: Date.now()
     },
     lastUpdateAt:{
         type: Date

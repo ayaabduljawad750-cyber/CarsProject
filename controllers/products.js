@@ -158,7 +158,3 @@ try{
     getAllProducts,
     getProductById,
     getFilteredProducts};
-
-
-
-

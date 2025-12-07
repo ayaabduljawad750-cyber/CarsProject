@@ -5,9 +5,6 @@ const validateFeedback = (req, res, next) => {
     if (!product) {
         return res.status(400).json({ message: "Product ID is required" })
     }
-    if (!comment || comment.trim() === "") {
-        return res.status(400).json({ message: "Comment is required" });
-    }
     next();
 };
 

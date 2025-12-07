@@ -1,4 +1,9 @@
+console.log(process.env.JWT_SECRET);
 import Order from "../models/order.js";
+import Stripe from "stripe";
+
+
+// const stripe = new Stripe(process.env.STRIPE_SECRET);
 
 // Create a new order
 export const createOrder = async (req, res) => {
@@ -20,6 +25,46 @@ export const createOrder = async (req, res) => {
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// calculate order 
+export const calculateTotalPrice = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    const order = await Order.findById(orderId)
+      .populate("items.productId");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    let totalPrice = 0;
+
+    order.items.forEach(item => {
+      if (!item.productId || !item.productId.price) return;
+
+      totalPrice += item.productId.price * item.quantity;
+    });
+
+    order.totalPrice = totalPrice;
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      totalPrice,
+      data: order
+    });
+
+  } catch (error) {
+    res.status(500).json({
       success: false,
       message: error.message
     });
@@ -305,3 +350,39 @@ export const deleteOrderByUser = async (req, res) => {
     });
   }
 };
+
+
+// connect payment
+export const createPaymentIntent = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+
+    if (!order || !order.totalPrice) {
+      return res.status(400).json({
+        success: false,
+        message: "Calculate total price first"
+      });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET);
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: order.totalPrice * 100, // stripe uses cents
+      currency: "usd",
+      metadata: { orderId: order._id.toString() }
+    });
+
+    res.status(200).json({
+      success: true,
+      clientSecret: paymentIntent.client_secret
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+

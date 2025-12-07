@@ -4,9 +4,6 @@ const validateReview = (req, res, next) => {
   if (!product) {
     return res.status(400).json({ message: "Product ID is required" });
   }
-  if (evaluation == undefined) {
-    return res.status(400).json({ message: "Evaluation is required" });
-  }
   next();
 };
 

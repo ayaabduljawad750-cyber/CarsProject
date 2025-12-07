@@ -1,13 +1,14 @@
 import express from "express";
+import auth from "../middlewares/auth.js";
 import *as orderController from "../controllers/order.js";
 
 let orderRoute = express.Router()
 
-orderRoute.post("/createOrder",orderController.createOrder);
+orderRoute.post("/",auth,orderController.createOrder);
 
 orderRoute.get("/",orderController.filterOrders);
 
-orderRoute.get("/all", orderController.getAllOrders);
+orderRoute.get("/all", orderController.getAllOrders); 
 
 orderRoute.get("/:id", orderController.getOrderById);
 
