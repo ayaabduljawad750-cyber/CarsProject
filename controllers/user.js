@@ -117,7 +117,7 @@ const login = catchError(async (req, res, next) => {
     status: statusText.SUCCESS,
     message: "You login successfully",
     code: 200,
-    data: { token },
+    data: { token,user },
   });
 });
 
