@@ -37,7 +37,7 @@ const register = catchError(async (req, res, next) => {
 
   let newUser;
   if (req.file) {
-    let role = req.body.role
+    let role = req.params.role
     if(role!=userRoles.MaintenanceCenter&&role!=userRoles.SELLER){
       const error = appError.create(`${role} is not valid role`,400,statusText.FAIL)
       next(error)

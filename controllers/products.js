@@ -60,6 +60,7 @@ const createProduct = catchError(async (req, res, next) => {
     next(error);
     return;
   }
+  
   if (!req.file) {
     const error = appError.create(
       "Product image is required",

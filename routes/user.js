@@ -12,7 +12,7 @@ let userRoute = express.Router();
 userRoute.post("/register", userControl.register);
 
 userRoute.post(
-  "/register/sellerOrMaintenanceCenter",
+  "/register/:role",
   uploadImage.single("commercial"),
   userControl.register
 );
