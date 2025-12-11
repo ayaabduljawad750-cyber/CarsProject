@@ -1,70 +1,45 @@
-console.log(process.env.JWT_SECRET);
 import Order from "../models/order.js";
+import Products from "../models/Products.js";
 import Stripe from "stripe";
 
 
 // const stripe = new Stripe(process.env.STRIPE_SECRET);
 
-// Create a new order
+// create order
 export const createOrder = async (req, res) => {
   try {
-    console.log('Received order data:', req.body);
-    
-    const orderData = {
-      ...req.body,
-      userId: req.user.id 
-    };
+    const { products } = req.body.items;
+    for (let item of products) {
+      const product = await Products.findById(item.productId);
 
-    const order = await Order.create(orderData);
-    
-    res.status(201).json({
-      success: true,
-      message: 'Order created successfully',
-      data: order
-    });
-  } catch (error) {
-    console.error('Error creating order:', error);
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: `Product with id ${item.productId} not found`
+        });
+      }
 
-// calculate order 
-export const calculateTotalPrice = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    
-    const order = await Order.findById(orderId)
-      .populate("items.productId");
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found"
-      });
+      if (product.stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Not enough stock for product ${product.name}`
+        });
+      }
     }
 
-    let totalPrice = 0;
-
-    order.items.forEach(item => {
-      if (!item.productId || !item.productId.price) return;
-
-      totalPrice += item.productId.price * item.quantity;
+    const order = await Order.create({
+      ...req.body,
+      userId: req.user.id
     });
 
-    order.totalPrice = totalPrice;
-    await order.save();
-
-    res.status(200).json({
+    res.status(201).json({
       success: true,
-      totalPrice,
+      message: "Order created successfully",
       data: order
     });
 
   } catch (error) {
-    res.status(500).json({
+    res.status(400).json({
       success: false,
       message: error.message
     });
@@ -111,7 +86,6 @@ export const getAllOrders = async (req, res) => {
     const orders = await Order.find()
       .populate("userId")
       .populate("items.productId");
-
     res.status(200).json({
       success: true,
       results: orders.length,
@@ -125,19 +99,48 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
+// get user orders  
+export const getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.user.id })
+      .populate("items.productId");
+
+    res.status(200).json({
+      success: true,
+      results: orders.length,
+      data: orders
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // get order by id
 export const getOrderById = async (req, res) => {
   try {
     const { id } = req.params; 
+    const userId = req.user.id;
+
     const order = await Order.findById(id)
-      .populate("userId")       
+      .populate("userId","firstName lastName")       
       .populate("items.productId"); 
+
 
     if (!order) {
       return res.status(404).json({
         success: false,
         message: "Order not found"
+
       });
+    }
+    if(userId!==order.userId){
+      return res.status(401).json({
+        success : false,
+        message:"that order is not yours"
+      })
     }
 
     res.status(200).json({
@@ -158,26 +161,25 @@ export const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const allowed = ["pending", "confirmed"];
-    if (!allowed.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid status value"
-      });
-    }
-
-    const order = await Order.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true } 
-    );
-
+    const order = await Order.findById(id);
     if (!order) {
       return res.status(404).json({
         success: false,
         message: "Order not found"
       });
     }
+
+    if (status === "confirmed" && order.status !== "confirmed") {
+      for (const item of order.items) {
+        await Products.findByIdAndUpdate(
+          item.productId,
+          { $inc: { stock: -item.quantity } }
+        );
+      }
+    }
+
+    order.status = status;
+    await order.save();
 
     res.status(200).json({
       success: true,
@@ -193,14 +195,26 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-// update order items by id
+
+// update order items by id 
 export const updateOrderItem = async (req, res) => {
   try {
+
     const { id } = req.params; 
     const { itemId } = req.body;
     const { productId, quantity } = req.body; 
+  const order = await Order.findById(id);
 
-    const order = await Order.findById(id);
+if (!order) {
+  return res.status(404).json({ message: "Order not found" });
+}
+
+if (
+  order.userId.toString() !== req.user.id &&
+  req.user.role !== "admin"
+) {
+  return res.status(403).json({ message: "Not allowed" });
+}
     if (!order) {
       return res.status(404).json({
         success: false,

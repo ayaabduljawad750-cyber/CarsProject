@@ -116,4 +116,15 @@ function isPhone(phone) {
   }
 }
 
-export  { isName, isEmail, isStrongPassword , isCenterNameOrLocation,isPhone};
+function testText(text){
+const textRegex = /^[a-zA-Z0-9\s\-]+$/;
+if(!textRegex.test(text)){
+  const error = appError.create(`${text} must be contain A-Z , a-z , 0-9 , space and - only`,400,statusText.FAIL)
+  throw error
+}
+else{
+  return true
+}
+}
+
+export  { isName, isEmail, isStrongPassword , isCenterNameOrLocation,isPhone, testText};

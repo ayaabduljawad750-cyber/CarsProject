@@ -6,34 +6,25 @@ const orderSchema = new mongoose.Schema({
     default: () => new mongoose.Types.ObjectId()
   },
 
-
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-
-  items: [{
-    productId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product',
-      required: true
-    },
-    name: String,
-    price: Number,
-    quantity: {
-      type: Number,
-      default: 1,
-      min: 1
-    },
-    totalItemPrice: Number
-  }],
-
- totalPrice: {
-  type: Number,
-  required: false,  
-  min: 0
-},
+items: [{
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product',
+    required: true
+  },
+  quantity: {
+    type: Number,
+    default: 1,
+    min: 1
+  },
+  price: Number, 
+  totalItemPrice: Number
+}],
   
   paymentMethod: {
     type: String,
@@ -51,10 +42,6 @@ const orderSchema = new mongoose.Schema({
     default: 'pending'
   },
 
-  crossRAL: {
-    type: String
-  },
-
   orderDate: {
     type: Date,
     default: Date.now
@@ -64,26 +51,33 @@ const orderSchema = new mongoose.Schema({
     fullName: String,
     address: String,
     city: String,
-    notes: String
   }
 
 }, { 
   timestamps: true 
 });
 
-orderSchema.pre('save', function(next) {
+orderSchema.pre('save', async function (next) {
+  for (const item of this.items) {
+    const product = await mongoose
+      .model('Product')
+      .findById(item.productId);
 
-  this.items.forEach(item => {
-    item.totalItemPrice = item.price * item.quantity;
-  });
+    if (!product) {
+      return next(new Error("Product not found"));
+    }
 
-  this.totalPrice = this.items.reduce((total, item) => {
-    return total + item.totalItemPrice;
-  }, 0);
+    item.price = product.price;
+    item.totalItemPrice = product.price * item.quantity;
+  }
+
+  this.totalPrice = this.items.reduce(
+    (total, item) => total + item.totalItemPrice,
+    0
+  );
 
   next();
 });
-
 
 const Order = mongoose.model("Order", orderSchema);
 

@@ -1,193 +1,72 @@
+import catchError from "../middlewares/catchError.js";
 import cartModel from "../models/cart.js";
-import mongoose from "mongoose";
+import productModel from "../models/Products.js";
+import appError from "../utils/appError.js";
+import statusText from "../utils/statusText.js";
 
-const getAllCart =async(req ,res)=>{
-try{
-if(req.user.role !=="admin"){
-    return res.status(403).json({message:"admins only"})
-};
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    const minPrice=parseFloat(req.query.min) || 0;
-    const maxPrice=parseFloat(req.query.max) || Infinity;
+const addToCart = catchError(async (req, res, next) => {
+  const userId = req.user.id;
+  const { productId, quantity } = req.body;
 
-    const filter ={};
-    filter.totalPrice={$gte:minPrice,$lte:maxPrice}
-    const total = await cartModel.countDocuments(filter);
-    const carts = await cartModel
-    .find(filter)
-    .populate("userId", "name email")
-    .populate("items.product", "name price")
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 })
-return res.status(200).json({
-    message:"All carts",
-    page,
-    limit,
-    total,
-    data:carts
+  if (!productId) {
+    return next(
+      appError.create("productId is required", 400, statusText.FAIL)
+    );
+  }
+
+  const product = await productModel.findById(productId);
+  if (!product) {
+    return next(
+      appError.create("Product not found", 404, statusText.FAIL)
+    );
+  }
+
+  const qty = Number(quantity) || 1;
+
+  if (qty > product.stock) {
+    return next(
+      appError.create("Quantity exceeds stock", 400, statusText.FAIL)
+    );
+  }
+
+  let cart = await cartModel.findOne({ userId });
+
+  if (!cart) {
+    cart = await cartModel.create({
+      userId,
+      items: [{ productId, quantity: qty }]
+    });
+  } else {
+    const itemIndex = cart.items.findIndex(
+      item => item.productId.toString() === productId
+    );
+
+    if (itemIndex > -1) {
+      const newQty = cart.items[itemIndex].quantity + qty;
+
+      if (newQty > product.stock) {
+        return next(
+          appError.create("Quantity exceeds stock", 400, statusText.FAIL)
+        );
+      }
+
+      cart.items[itemIndex].quantity = newQty;
+    } else {
+      cart.items.push({ productId, quantity: qty });
+    }
+
+    await cart.save();  
+  }
+
+  res.status(201).json({
+    status: statusText.SUCCESS,
+    message: "add to cart successfully",
+    code: 201,
+    data: { cart }
+  });
 });
+
+
+export default {
+  addToCart
 }
-catch(err){
-res.status(500).json({ message: "Error getting carts" });
-}};
-
-
-const createcart =async(req , res)=>{
-    try{
-        if(req.user.role !=="admin" && req.user.role !=="user"){
-        return res.status(403).json({message:"admins only and users"})
-        }
-        const { items } =req.body;
-        if(!items || items.length === 0){
-            return res.status(400).json({message:"Cart items are required"});
-
-        }
-        const cart =await cartModel.create({userId:req.user.id,items});
-        res.status(201).json({message:"Cart created",data:cart});
-
-
-    }
-    catch(err){
-    res.status(500).json({ message: "Error creat cart" });
-    }
-};
-
-const getCartByUserId =async(req , res)=>{
-    try{
-        if(req.user.role !== "admin" && req.user.id !== id){
-            return res.status(403).json({message:"Access denied"});
-        }
-        const {id} =req.params;
-        if(!mongoose.Types.ObjectId.isValid(id)){
-            return res.status(400).json({ message: "Invalid cart ID" });
-        }
-        const cart =await cartModel.findById(id);
-
-        if(!cart){
-        return res.status(404).json({message:"Cart not found"});
-  }
-  res.status(200).json({message:"Cart found",data:cart});
-
-    }
-    catch(err){
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-const getCartById = async(req ,res)=>{
-    try{
-        const {id}=req.params;
-        if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(400).json({message:"Invalid cart ID"});
-        }
-        if(req.user.role !== "admin" && req.user.id !==id){
-            return res.status(403).json({message:"Access denied"});
-        }
-        const cart=await cartModel.findById(id);
-        if(!cart){
-        return res.status(404).json({message:"Cart not found"});
-        }
-        res.status(200).json({message:"Cart found",data:cart})
-    }catch(err){
-        res.status(500).json({ message: "Internal server error" });
-    }};
-
-
-
-
-    const updateCartByUserId =async(req , res)=>{
-    try{
-        const updateCart = req.body;
-        if (Object.keys(updateCart).length === 0) {
-      return res.status(400).json({message: "Enter the updated information"});
-    }
-     const cart = await cartModel.findOne({ userId: req.user.id });
-     if (!cart) {
-    return res.status(404).json({ message: "Cart not found" });
-  }
-       if (updateCart.items) {
-      cart.items = updateCart.items;
-    }
-    await cart.save();
-         res.status(200).json({message:"Cart updated",data:cart});
-  }
-    catch(err){
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-
-
-
-    const updateCartById =async(req ,res)=>{
-    try{
-        const {id}=req.params;
-        const updateCart = req.body;
-        if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(400).json({message:"Invalid cart ID"});
-        }
-         if (Object.keys(updateCart).length === 0) {
-      return res.status(400).json({message: "Enter the updated information"});
-    }
-     const cart = await cartModel.findById(id);
-     if (!cart) {
-    return res.status(404).json({ message: "Cart not found" });
-  }
-        if(req.user.role !== "admin" && req.user.id !== cart.userId.toString()){
-            return res.status(403).json({message:"Access denied"});
-        }
-        
-       if (updateCart.items) {
-      cart.items = updateCart.items;
-    }
-    await cart.save();
-        res.status(200).json({message:"Cart updated",data:cart});
-
-    }catch(err){
-        res.status(500).json({ message: "Internal server error" });
-    }};
-
-
-
-const deleteByUserId=async(req , res)=>{
-try{
-     const cart = await cartModel.findOne({ userId: req.user.id });
-     if (!cart) {
-    return res.status(404).json({ message: "Cart not found" });
-  }
-  await cart.remove();
- res.status(200).json({message:"Cart deleted"})
-}
-catch(err){
-     res.status(500).json({ message: "Internal server error" });
-}
-};
-
-
-const deleteById=async(req , res)=>{
-try{ 
-    const {id}=req.params;
-     if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(400).json({message:"Invalid cart ID"});
-        }
-       
-     const cart = await cartModel.findById(id);
-     if (!cart) {
-    return res.status(404).json({ message: "Cart not found" });
-  }
-   if(req.user.role !=="admin"&& req.user.id !== cart.userId.toString()){
-     return res.status(403).json({ message: "Access denied" });
-   }
-  await cart.remove();
- res.status(200).json({message:"Cart deleted"})
-}
-catch(err){
-     res.status(500).json({ message: "Internal server error" });
-}
-};
-
-
-export default {getAllCart,getCartById,getCartByUserId,updateCartById,updateCartByUserId,deleteById,deleteByUserId,createcart};
-
