@@ -74,9 +74,9 @@ import statusText from"./statusText.js";
     );
     throw error;
     return false;
-  } else if (password.length < 8 || password > 20) {
+  } else if (password.length < 8 ) {
     const error = appError.create(
-      "Password length must be between 8 and 20 characters",
+      "Password length must be more than 8 characters.",
       400,
       statusText.FAIL
     );

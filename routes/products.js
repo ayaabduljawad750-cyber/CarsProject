@@ -8,6 +8,7 @@ import uploadImage from "../middlewares/uploadImage.js";
 const productRoute = express.Router();
 
 productRoute.get("/",controlProduct.getProducts)
+productRoute.get("/get",auth,authorize(userRoles.SELLER),controlProduct.getMyProducts)
 productRoute.post("/", auth,authorize(userRoles.SELLER), uploadImage.single("image"),controlProduct.createProduct);
 productRoute.get("/:id",controlProduct.getProductById)
 productRoute.put("/:id",auth,authorize(userRoles.SELLER),uploadImage.single("image"),controlProduct.updateProductById)

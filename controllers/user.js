@@ -5,7 +5,7 @@ import userModel from "../models/user.js";
 import appError from "../utils/appError.js";
 import statusText from "../utils/statusText.js";
 import { isEmail, isName, isStrongPassword } from "../utils/validate.js";
-import transporterStore from "../utils/transporterStore.js";
+import nodemailer from "nodemailer"
 import userRoles from "../utils/userRoles.js";
 
 const register = catchError(async (req, res, next) => {
@@ -289,7 +289,13 @@ const sendVerificationCode = catchError(async (req, res, next) => {
     next(error);
     return;
   }
-
+const transporterStore = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EmailStore,
+    pass: process.env.PasswordStore,
+  },
+});
   const sendVerificationEmail = async (email, code) => {
     await transporterStore.sendMail({
       from: process.env.EmailStore,

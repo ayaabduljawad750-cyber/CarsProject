@@ -195,6 +195,90 @@ const getProducts = catchError(async (req, res, next) => {
   });
 });
 
+const getMyProducts = catchError(async (req, res, next) => {
+  const sellerId = req.user.id; // Get ID from the logged-in user token
+  
+  const {
+    category,
+    brand,
+    carModel,
+    minPrice,
+    maxPrice,
+    inStock,
+    sortBy,
+    search, // General search term
+    page = 1,
+    limit = 10,
+  } = req.query;
+
+  // Force the query to only look for products owned by this seller
+  const filter = { sellerId: sellerId };
+
+  /* ================= FILTERS ================= */
+
+  if (category) {
+    filter.category = category;
+  }
+
+  // Allow a generic "search" query that checks name OR brand OR model
+  if (search) {
+    const searchRegex = new RegExp(search, "i");
+    filter.$or = [
+      { name: searchRegex },
+      { brand: searchRegex },
+      { carModel: searchRegex }
+    ];
+  } else {
+    // Specific filters if generic search isn't used
+    if (brand) filter.brand = new RegExp(brand, "i");
+    if (carModel) filter.carModel = new RegExp(carModel, "i");
+  }
+
+  if (minPrice || maxPrice) {
+    filter.price = {};
+    if (minPrice) filter.price.$gte = Number(minPrice);
+    if (maxPrice) filter.price.$lte = Number(maxPrice);
+  }
+
+  if (inStock === "true") {
+    filter.stock = { $gt: 0 };
+  }
+
+  /* ================= SORTING ================= */
+  let sort = {};
+
+  if (sortBy === "name-asc") sort.name = 1;
+  else if (sortBy === "name-desc") sort.name = -1;
+  else if (sortBy === "price-high") sort.price = -1;
+  else if (sortBy === "price-low") sort.price = 1;
+  else if (sortBy === "oldest") sort.createdAt = 1;
+  else sort.createdAt = -1; // Default to latest
+
+  /* ================= PAGINATION ================= */
+  const skip = (page - 1) * limit;
+
+  const products = await productModel
+    .find(filter)
+    .sort(sort)
+    .skip(skip)
+    .limit(Number(limit));
+    // No need to populate sellerId, because the seller is the user!
+
+  const total = await productModel.countDocuments(filter);
+
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "your products retrieved successfully",
+    code: 200,
+    data: {
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
+      products,
+    },
+  });
+});
+
 const getProductById = catchError(async (req, res, next) => {
   const productId = req.params.id;
   const product = await productModel
@@ -332,5 +416,6 @@ export default {
   getProducts,
   updateProductById,
   getProductById,
+  getMyProducts,
   deleteProductById
 };
