@@ -9,6 +9,11 @@ const BookingSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    maintenanceCenterId:{
+     type:mongoose.Schema.Types.ObjectId,
+     ref:"MaintenanceCenter",
+     required:true,
+    },
     role: {
       type: String,
       trim: true,

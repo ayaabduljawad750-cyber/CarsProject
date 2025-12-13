@@ -7,6 +7,7 @@ import userRoles from "../utils/userRoles.js"
 let maintenanceCenterRoute = express.Router()
 
 maintenanceCenterRoute.get("/",centerControl.getCenters)
+maintenanceCenterRoute.get("/my-center", auth, authorize(userRoles.MaintenanceCenter), centerControl.getMyCenter);
 maintenanceCenterRoute.post("/",auth,authorize(userRoles.MaintenanceCenter),centerControl.addCenter)
 maintenanceCenterRoute.get("/:id",centerControl.getCenterById)
 maintenanceCenterRoute.put("/:id",auth,authorize(userRoles.MaintenanceCenter),centerControl.updateCenterById)

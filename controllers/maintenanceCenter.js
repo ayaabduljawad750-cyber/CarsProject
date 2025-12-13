@@ -23,7 +23,7 @@ const addCenter = catchError(async (req, res, next) => {
   isPhone(phone);
   isEmail(email);
 
-  const center = await maintenanceCenterModel.find({ addBy: userId });
+  const center = await maintenanceCenterModel.findOne({ addBy: userId });
 
   if (center) {
     const error = appError.create(
@@ -151,6 +151,17 @@ const deleteCenterById = catchError(async (req,res,next)=>{
 
 })
 
+const getMyCenter = catchError(async (req, res, next) => {
+  const userId = req.user.id;
+  const center = await maintenanceCenterModel.findOne({ addedBy: userId });
+  
+  // It is okay if center is null (means they haven't created one yet)
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    data: { center }
+  });
+});
+
 export default {
-  addCenter,getCenters,getCenterById,updateCenterById,deleteCenterById
+  addCenter,getCenters,getCenterById,updateCenterById,deleteCenterById,getMyCenter
 }

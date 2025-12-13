@@ -1,19 +1,25 @@
-import express from"express";
-import asyncHandler from"express-async-handler";
-import BookingMaintenance from"../models/bookMaintenance.js";
-// import {validation ,validationUpdateBooking} from"../controllers/BookingControllers.js";
-const bookingRouter =express.Router();
-import userModel from"../models/user.js"
-import controllerBookings from"../controllers/BookingControllers.js"
+import express from "express";
+import controllerBookings from "../controllers/BookingControllers.js";
+import auth from "../middlewares/auth.js";
+import authorize from "../middlewares/authorization.js";
+import userRoles from "../utils/userRoles.js";
 
-bookingRouter.get("/" , controllerBookings.getBooks)
+const bookingRouter = express.Router();
 
-bookingRouter.post ("/" , controllerBookings.makeNewBooking);
+// 1. User Creates Booking
+bookingRouter.post("/", auth, controllerBookings.makeNewBooking);
 
-bookingRouter.put("/:id", controllerBookings.editBooking)
+// 2. Maintenance Center Gets THEIR incoming requests
+// Note: This route must come BEFORE /:id
+bookingRouter.get("/my-incoming-requests", auth, authorize(userRoles.MaintenanceCenter), controllerBookings.getCenterBookings);
 
-bookingRouter.delete("/:id" , controllerBookings.deleteBooking)
+// 3. User Gets THEIR OWN history
+bookingRouter.get("/my-history", auth, controllerBookings.getMyBookingsAsUser);
 
-bookingRouter.put("/completedBookings/:id", controllerBookings.editStatus);
+// 4. Update Status (Accept/Reject)
+bookingRouter.patch("/:id/status", auth, authorize(userRoles.MaintenanceCenter), controllerBookings.editStatus);
 
-export default bookingRouter
+// 5. Delete
+bookingRouter.delete("/:id", auth, controllerBookings.deleteBooking);
+
+export default bookingRouter;
