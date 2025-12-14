@@ -60,7 +60,7 @@ const createProduct = catchError(async (req, res, next) => {
     next(error);
     return;
   }
-  
+
   if (!req.file) {
     const error = appError.create(
       "Product image is required",
@@ -70,6 +70,7 @@ const createProduct = catchError(async (req, res, next) => {
     next(error);
     return;
   }
+
   const product = {
     name,
     brand,
@@ -117,7 +118,7 @@ const getProducts = catchError(async (req, res, next) => {
   }
 
   if (brand) {
-    filter.brand = new RegExp(brand, "i"); // case-insensitive
+    filter.brand = new RegExp(brand, "i");
   }
 
   if (carModel) {
@@ -139,19 +140,19 @@ const getProducts = catchError(async (req, res, next) => {
   let sort = {};
 
   if (sortBy === "high-eval") {
-    sort.evaluation = -1; // High to Low
+    sort.evaluation = -1;
   }
 
   if (sortBy === "low-eval") {
-    sort.evaluation = 1; // Low to High
+    sort.evaluation = 1;
   }
 
   if (sortBy === "name-asc") {
-    sort.name = 1; // A → Z
+    sort.name = 1;
   }
 
   if (sortBy === "name-desc") {
-    sort.name = -1; // Z → A
+    sort.name = -1;
   }
 
   if (sortBy === "price-high") {
@@ -181,6 +182,18 @@ const getProducts = catchError(async (req, res, next) => {
     .limit(Number(limit))
     .populate("sellerId", "firstName lastName email");
 
+
+  const formattedProducts = products.map(p => ({
+  ...p._doc,
+  image: p.image && p.image.data
+    ? {
+        contentType: p.image.contentType,
+        data: p.image.data.toString("base64"),
+      }
+    : null,
+}));
+
+
   const total = await productModel.countDocuments({ ...filter });
   res.status(200).json({
     status: statusText.SUCCESS,
@@ -190,14 +203,14 @@ const getProducts = catchError(async (req, res, next) => {
       total,
       page: Number(page),
       pages: Math.ceil(total / limit),
-      products,
+      products: formattedProducts,
     },
   });
 });
 
 const getMyProducts = catchError(async (req, res, next) => {
-  const sellerId = req.user.id; // Get ID from the logged-in user token
-  
+  const sellerId = req.user.id;
+
   const {
     category,
     brand,
@@ -206,12 +219,11 @@ const getMyProducts = catchError(async (req, res, next) => {
     maxPrice,
     inStock,
     sortBy,
-    search, // General search term
+    search,
     page = 1,
     limit = 10,
   } = req.query;
 
-  // Force the query to only look for products owned by this seller
   const filter = { sellerId: sellerId };
 
   /* ================= FILTERS ================= */
@@ -220,7 +232,6 @@ const getMyProducts = catchError(async (req, res, next) => {
     filter.category = category;
   }
 
-  // Allow a generic "search" query that checks name OR brand OR model
   if (search) {
     const searchRegex = new RegExp(search, "i");
     filter.$or = [
@@ -229,7 +240,6 @@ const getMyProducts = catchError(async (req, res, next) => {
       { carModel: searchRegex }
     ];
   } else {
-    // Specific filters if generic search isn't used
     if (brand) filter.brand = new RegExp(brand, "i");
     if (carModel) filter.carModel = new RegExp(carModel, "i");
   }
@@ -252,7 +262,7 @@ const getMyProducts = catchError(async (req, res, next) => {
   else if (sortBy === "price-high") sort.price = -1;
   else if (sortBy === "price-low") sort.price = 1;
   else if (sortBy === "oldest") sort.createdAt = 1;
-  else sort.createdAt = -1; // Default to latest
+  else sort.createdAt = -1;
 
   /* ================= PAGINATION ================= */
   const skip = (page - 1) * limit;
@@ -262,7 +272,17 @@ const getMyProducts = catchError(async (req, res, next) => {
     .sort(sort)
     .skip(skip)
     .limit(Number(limit));
-    // No need to populate sellerId, because the seller is the user!
+
+  // تحويل الصور لـ Base64
+  const formattedProducts = products.map(p => ({
+    ...p._doc,
+    image: p.image
+      ? {
+          contentType: p.image.contentType,
+          data: p.image.data.toString("base64"),
+        }
+      : null,
+  }));
 
   const total = await productModel.countDocuments(filter);
 
@@ -274,7 +294,7 @@ const getMyProducts = catchError(async (req, res, next) => {
       total,
       page: Number(page),
       pages: Math.ceil(total / limit),
-      products,
+      products: formattedProducts,
     },
   });
 });
