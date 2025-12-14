@@ -73,14 +73,12 @@ const getMyCart = catchError(async (req, res, next) => {
       lastUpdateAt: Date.now(),
     });
   }
-  res
-    .status(200)
-    .json({
-      status: statusText.SUCCESS,
-      message: "your cart is here",
-      code: 200,
-      data: { cart },
-    });
+  res.status(200).json({
+    status: statusText.SUCCESS,
+    message: "your cart is here",
+    code: 200,
+    data: { cart },
+  });
 });
 
 const updateCartById = catchError(async (req, res, next) => {
@@ -117,13 +115,39 @@ const updateCartById = catchError(async (req, res, next) => {
 
   cart.items[itemIndex].quantity = quantity;
   cart.lastUpdateAt = Date.now();
+  if (quantity == 0) {
+    cart.items.slice(itemIndex, 1);
+  }
   await cart.save();
 });
 
-
+const clearCart = catchError(async (req, res, next) => {
+  const userId = req.user.id;
+  const cart = await cartModel.findOne({ userId });
+  if (!cart) {
+    const error = appError.create(
+      "you do not have a cart",
+      404,
+      statusText.FAIL
+    );
+    next(error);
+    return;
+  }
+  cart.items = [];
+  await cart.save();
+  res
+    .status(200)
+    .json({
+      status: statusText.SUCCESS,
+      message: "your cart is empty now",
+      code: 200,
+      data: null,
+    });
+});
 
 export default {
   addToCart,
   getMyCart,
-  updateCartById
+  updateCartById,
+  clearCart,
 };
