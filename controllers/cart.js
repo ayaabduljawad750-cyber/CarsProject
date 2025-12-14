@@ -84,6 +84,7 @@ const getMyCart = catchError(async (req, res, next) => {
 const updateCartById = catchError(async (req, res, next) => {
   const userId = req.user.id;
   const { productId, quantity } = req.body;
+  
   const cart = await cartModel.findOne({ userId });
   if (!cart) {
     const error = appError.create(
@@ -93,6 +94,10 @@ const updateCartById = catchError(async (req, res, next) => {
     );
     next(error);
     return;
+  }
+  const product = await productModel.findById(productId);
+  if (!product) {
+  return next(appError.create("Product not found", 404, statusText.FAIL));
   }
   if (quantity > product.stock) {
     const error = appError.create(
