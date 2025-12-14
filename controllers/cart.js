@@ -38,7 +38,7 @@ const addToCart = catchError(async (req, res, next) => {
     );
 
     if (itemIndex > -1) {
-    //  const newQty = cart.items[itemIndex].quantity + qty;
+     const newQty = 1
 
       if (newQty > product.stock) {
         return next(
