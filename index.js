@@ -26,7 +26,7 @@ app.use(express.json());
 app.use("/users",userRoute)
 app.use("/orders",orderRoute)
 app.use("/products",productRoute)
-app.use("/cart",cartRoute)
+app.use("/api/cart",cartRoute)
 app.use("/review",reviewRoute)
 app.use("/feedback",feedbackRoute)
 app.use("/booking",bookingRoute)

@@ -273,16 +273,7 @@ const getMyProducts = catchError(async (req, res, next) => {
     .skip(skip)
     .limit(Number(limit));
 
-  // تحويل الصور لـ Base64
-  const formattedProducts = products.map(p => ({
-    ...p._doc,
-    image: p.image
-      ? {
-          contentType: p.image.contentType,
-          data: p.image.data.toString("base64"),
-        }
-      : null,
-  }));
+
 
   const total = await productModel.countDocuments(filter);
 
@@ -294,29 +285,32 @@ const getMyProducts = catchError(async (req, res, next) => {
       total,
       page: Number(page),
       pages: Math.ceil(total / limit),
-      products: formattedProducts,
+      products,
     },
   });
 });
 
 const getProductById = catchError(async (req, res, next) => {
   const productId = req.params.id;
-  const product = await productModel
-    .findById(productId)
-    .populate("sellerId", "firstName lastName email");
-  if (!product) {
-    const error = appError.create("Product not found", 404, statusText.FAIL);
-    next(error);
-    return;
-  }
+  const product = await productModel.findById(productId).populate("sellerId", "firstName lastName email");
+  if (!product) return next(appError.create("Product not found", 404, statusText.FAIL));
+
+  const formattedProduct = {
+    ...product._doc,
+    image: product.image ? {
+      contentType: product.image.contentType,
+      data: product.image.data.toString("base64"),
+    } : null,
+  };
 
   res.status(200).json({
     status: statusText.SUCCESS,
     message: "product is here",
     code: 200,
-    data: { product },
+    data: { product: formattedProduct },
   });
 });
+
 
 const updateProductById = catchError(async (req, res, next) => {
   const userId = req.user.id;
