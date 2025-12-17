@@ -8,7 +8,7 @@ import Stripe from "stripe";
 // create order
 export const createOrder = async (req, res) => {
   try {
-    const { products } = req.body.items;
+    const  products  = req.body.items;
     for (let item of products) {
       const product = await Products.findById(item.productId);
 
