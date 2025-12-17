@@ -38,7 +38,9 @@ const addToCart = catchError(async (req, res, next) => {
 
     if (itemIndex > -1) {
       // ✅ overwrite instead of increment
-      cart.items[itemIndex].quantity = qty;
+      const error = appError.create("Product already in your cart",400,statusText.FAIL)
+      next(error)
+      return;
     } else {
       cart.items.push({ productId, quantity: qty });
     }

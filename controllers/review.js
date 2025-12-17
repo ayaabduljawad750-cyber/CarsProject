@@ -1,47 +1,57 @@
-import Review from"../models/review.js";
-import User from"../models/user.js";
-import Product from"../models/Products.js";
+import Review from "../models/review.js";
+import User from "../models/user.js";
+import Product from "../models/Products.js";
 
 const createReview = async (req, res) => {
-  try{
-    const userId = req.userId;
-    const {product, evaluation } = req.body;
-   // Check User Exists
+  try {
+    const userId = req.user.id;
+    const { product, evaluation } = req.body;
+    // Check User Exists
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-  //Check Product Exists
+    //Check Product Exists
     const productExists = await Product.findById(product);
     if (!productExists) {
       return res.status(404).json({ message: "Product not found" });
     }
-  //prevent multiple reviews by same user for same product
+    //prevent multiple reviews by same user for same product
     const existingReview = await Review.findOne({ userId, product });
     if (existingReview) {
-      return res.status(400).json({ message: "You have already reviewed this product" });
+      return res
+        .status(400)
+        .json({ message: "You have already reviewed this product" });
     }
 
-//Create Review
-        const review = await Review.create({userId, product, evaluation});
-        return res.status(201).json(review);
-    }catch(err){
-        res.status(500).json({message:"error when createdreview"});
-    }
+    //Create Review
+    const review = await Review.create({ userId, product, evaluation });
+    // after creating review
+    const reviews = await Review.find({ product });
+    const avg =
+      reviews.reduce((acc, r) => acc + r.evaluation, 0) / reviews.length;
+
+    await Product.findByIdAndUpdate(product, {
+      evaluation: avg,
+    });
+    return res.status(201).json(review);
+  } catch (err) {
+    res.status(500).json({ message: "error when createdreview" });
+  }
 };
 //Update Review
 const updateReview = async (req, res) => {
-    try{
-        const review = await Review.findByIdAndUpdate(
-            req.params.id,
-            {...req.body, lastUpdateAt: Date.now() },
-            {new: true}
-        );
-        if (!review) return res.status(404).json({ message: "Review not found" });
-        res.json(review);
-    }catch (err){
-        res.status(500).json({message:"error when updatedreview"});
-    }
+  try {
+    const review = await Review.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, lastUpdateAt: Date.now() },
+      { new: true }
+    );
+    if (!review) return res.status(404).json({ message: "Review not found" });
+    res.json(review);
+  } catch (err) {
+    res.status(500).json({ message: "error when updatedreview" });
+  }
 };
 // Delete Review
 const deleteReview = async (req, res) => {
@@ -49,7 +59,6 @@ const deleteReview = async (req, res) => {
     const review = await Review.findByIdAndDelete(req.params.id);
     if (!review) return res.status(404).json({ message: "Review not found" });
     res.json({ message: "Review deleted" });
-
   } catch (err) {
     res.status(500).json({ message: "error when deletedreview" });
   }
@@ -58,13 +67,12 @@ const deleteReview = async (req, res) => {
 // Get Review by ID
 const getReviewById = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.id)
+    const review = await Review.findById(req.params.id);
     if (!review) return res.status(404).json({ message: "Not found" });
 
     res.json(review);
-
   } catch (err) {
-    res.status(500).json( { message: "error when getreview" } );
+    res.status(500).json({ message: "error when getreview" });
   }
 };
 
@@ -91,7 +99,7 @@ const getProductRating = async (req, res) => {
     res.json({
       productId,
       averageRating: avg,
-      totalReviews: reviews.length
+      totalReviews: reviews.length,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -103,5 +111,5 @@ export default {
   getReviewById,
   deleteReview,
   updateReview,
-  createReview
-}
+  createReview,
+};
