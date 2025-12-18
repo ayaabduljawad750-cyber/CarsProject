@@ -103,25 +103,34 @@ const getProducts = catchError(async (req, res, next) => {
     carModel,
     minPrice,
     maxPrice,
-    inStock,
     sortBy,
+    search,
     page = 1,
     limit = 10,
   } = req.query;
 
   const filter = {};
 
-  /* ================= FILTERS ================= */
+  /* ================= SEARCH FUNCTIONALITY ================= */
+  if (search) {
+    const searchRegex = new RegExp(search, "i");
+    filter.$or = [
+      { name: searchRegex },
+      { brand: searchRegex },
+      { carModel: searchRegex }
+    ];
+  }
 
+  /* ================= FILTERS ================= */
   if (category) {
     filter.category = category;
   }
 
-  if (brand) {
+  if (brand && !search) {
     filter.brand = new RegExp(brand, "i");
   }
 
-  if (carModel) {
+  if (carModel && !search) {
     filter.carModel = new RegExp(carModel, "i");
   }
 
@@ -131,70 +140,45 @@ const getProducts = catchError(async (req, res, next) => {
     if (maxPrice) filter.price.$lte = Number(maxPrice);
   }
 
-  if (inStock === "true") {
-    filter.stock = { $gt: 0 };
-  }
-
   /* ================= SORTING ================= */
-
   let sort = {};
-
-  if (sortBy === "high-eval") {
-    sort.evaluation = -1;
-  }
-
-  if (sortBy === "low-eval") {
-    sort.evaluation = 1;
-  }
-
-  if (sortBy === "name-asc") {
-    sort.name = 1;
-  }
-
-  if (sortBy === "name-desc") {
-    sort.name = -1;
-  }
-
-  if (sortBy === "price-high") {
-    sort.price = -1;
-  }
-
-  if (sortBy === "price-low") {
-    sort.price = 1;
-  }
-
-  if (sortBy === "latest") {
-    sort.createdAt = -1;
-  }
-
-  if (sortBy === "oldest") {
-    sort.createdAt = 1;
+  const sortOptions = {
+    "high-eval": { evaluation: -1 },
+    "low-eval": { evaluation: 1 },
+    "name-asc": { name: 1 },
+    "name-desc": { name: -1 },
+    "price-high": { price: -1 },
+    "price-low": { price: 1 },
+    "latest": { createdAt: -1 },
+    "oldest": { createdAt: 1 }
+  };
+  
+  if (sortBy && sortOptions[sortBy]) {
+    sort = sortOptions[sortBy];
   }
 
   /* ================= PAGINATION ================= */
-
   const skip = (page - 1) * limit;
 
   const products = await productModel
-    .find({ ...filter })
+    .find(filter)
     .sort(sort)
     .skip(skip)
     .limit(Number(limit))
     .populate("sellerId", "firstName lastName email");
 
-
   const formattedProducts = products.map(p => ({
-  ...p._doc,
-  image: p.image && p.image.data
-    ? {
-        contentType: p.image.contentType,
-        data: p.image.data.toString("base64"),
-      }
-    : null,
-}));
+    ...p._doc,
+    image: p.image && p.image.data
+      ? {
+          contentType: p.image.contentType,
+          data: p.image.data.toString("base64"),
+        }
+      : null,
+  }));
 
-
-  const total = await productModel.countDocuments({ ...filter });
+  const total = await productModel.countDocuments(filter);
+  
   res.status(200).json({
     status: statusText.SUCCESS,
     message: "products are here",
