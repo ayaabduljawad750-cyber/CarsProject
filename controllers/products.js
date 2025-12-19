@@ -105,6 +105,7 @@ const getProducts = catchError(async (req, res, next) => {
     maxPrice,
     sortBy,
     search,
+    inStock,
     page = 1,
     limit = 8,
   } = req.query;
@@ -132,6 +133,11 @@ const getProducts = catchError(async (req, res, next) => {
 
   if (carModel && !search) {
     filter.carModel = new RegExp(carModel, "i");
+  }
+
+  if(inStock == "true"){
+    filter.stock={}
+    filter.stock.$gt = 1
   }
 
   if (minPrice || maxPrice) {
@@ -178,7 +184,6 @@ const getProducts = catchError(async (req, res, next) => {
   }));
 
   const total = await productModel.countDocuments(filter);
-  
   res.status(200).json({
     status: statusText.SUCCESS,
     message: "products are here",
