@@ -106,7 +106,7 @@ const getProducts = catchError(async (req, res, next) => {
     sortBy,
     search,
     page = 1,
-    limit = 10,
+    limit = 8,
   } = req.query;
 
   const filter = {};

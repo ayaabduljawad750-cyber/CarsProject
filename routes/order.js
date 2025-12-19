@@ -1,30 +1,22 @@
 import express from "express";
 import auth from "../middlewares/auth.js";
-import isAdmin from "../middlewares/isAdmin.js"
-import *as orderController from "../controllers/order.js";
+import isAdmin from "../middlewares/isAdmin.js";
+import * as orderController from "../controllers/order.js";
 
-let orderRoute = express.Router()
+const router = express.Router();
 
-orderRoute.post("/",auth,orderController.createOrder);
+// Order routes
+router.post("/", auth, orderController.createOrder);
+router.get("/my", auth, orderController.getMyOrders);
+// Admin routes
+router.get("/", auth, isAdmin, orderController.filterOrders);
+router.get("/all", auth, isAdmin, orderController.getAllOrders);
 
-orderRoute.get("/",auth,isAdmin,orderController.filterOrders);
+router.patch("/cancel/:id", auth, orderController.cancelMyOrder); // User cancels their order
+router.get("/:id", auth, orderController.getOrderById);
 
-orderRoute.get("/all" ,isAdmin, orderController.getAllOrders);
 
-orderRoute.get("/My",auth, orderController.getMyOrders);
+router.patch("/status/:id", auth, isAdmin, orderController.updateOrderStatus); // Admin updates status
+router.delete("/:id", auth, isAdmin, orderController.deleteOrder);
 
-orderRoute.get("/:id",auth, orderController.getOrderById);
-
-orderRoute.patch("/status/:id", auth, isAdmin, orderController.updateOrderStatus);
-
-orderRoute.patch("/updateItem/:id", orderController.updateOrderItem);
-
-orderRoute.patch("/updateItem/:userId/:orderId",auth, orderController.updateItemByUser);
-
-orderRoute.get("/user/:userId", orderController.getOrdersByUser);
-
-orderRoute.delete("/:id", auth, isAdmin, orderController.deleteOrder);
-
-orderRoute.delete("/user/:userId/:orderId",auth, orderController.deleteOrderByUser);
-
-export default orderRoute
+export default router;
